@@ -1,0 +1,25 @@
+{
+  "name": "timur-flush/auth",
+  "description": "",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+    "name": "Timur Flush",
+    "email": "flush02@tutanota.com"
+    }
+  ],
+  "require": {
+    "php": "^7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "TimurFlush\\Auth\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4":{
+      "TimurFlush\\Auth\\Tests\\": "tests/"
+    }
+  }
+}
