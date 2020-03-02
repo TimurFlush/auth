@@ -1,0 +1,22 @@
+actor_suffix: Tester
+
+paths:
+    tests: tests
+    output: tests/_output
+    data: tests/_data
+    support: tests/_support
+    envs: tests/_envs
+
+extensions:
+    enabled:
+        - Codeception\Extension\RunFailed
+
+settings:
+    colors: true
+    memory_limit: 32M
+    lint: true
+
+# name of bootstrap that will be used
+# each bootstrap file should be
+# inside a suite directory.
+bootstrap: _bootstrap.php
