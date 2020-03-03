@@ -36,24 +36,24 @@ class OptionsRetrievingCest
             ],
             //
             [
-                'name'  => 'hashing',
+                'name'  => 'hashing.default',
                 'value' => Stub::makeEmpty(Argon::class)
             ],
             [
-                'name'   => 'hashing',
+                'name'   => 'hashing.default',
                 'value'  => Stub::makeEmpty(HashingInterface::class)
             ],
             //
             [
                 'batch' => [
-                    'date.format' => 'someFormat3',
-                    'hashing'     => Stub::makeEmpty(BCrypt::class),
+                    'date.format'     => 'someFormat3',
+                    'hashing.default' => Stub::makeEmpty(BCrypt::class),
                 ]
             ],
             [
                 'batch' => [
-                    'date.format' => 'someFormat4',
-                    'hashing'     => Stub::makeEmpty(HashingInterface::class),
+                    'date.format'     => 'someFormat4',
+                    'hashing.default' => Stub::makeEmpty(HashingInterface::class),
                 ]
             ],
         ];

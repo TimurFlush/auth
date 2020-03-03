@@ -7,7 +7,6 @@ namespace TimurFlush\Auth;
 use TimurFlush\Auth\Exception\InvalidArgumentException;
 use TimurFlush\Auth\Hashing\BCrypt;
 use TimurFlush\Auth\Hashing\HashingInterface;
-use SplFixedArray;
 
 class Manager
 {
@@ -91,6 +90,10 @@ class Manager
             return;
         }
 
+        /**
+         * After adding a new item, please also add it to the
+         * the tests/unit/Manager/StateCest::describeDefaultOptions().
+         */
         $options = [
             'userModel.allowZeroId' => [
                 'type'  => 'bool',
@@ -100,14 +103,14 @@ class Manager
                 'type'  => 'bool',
                 'value' => false
             ],
-            'hashing' => [
+            'hashing.default' => [
                 'type'  => HashingInterface::class,
                 'value' => new BCrypt()
             ],
             'date.format' => [
                 'type'  => 'string',
                 'value' => 'Y-m-d H:i:s.uO'
-            ]
+            ],
         ];
 
         static::$options = $options;

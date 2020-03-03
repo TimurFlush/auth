@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TimurFlush\Auth\Hashing;
 
+use TimurFlush\Auth\Exception;
 use TimurFlush\Auth\Exception\InvalidArgumentException;
 
 class Argon implements HashingInterface
@@ -39,18 +40,37 @@ class Argon implements HashingInterface
      * @param int    $timeCost
      * @param int    $threads
      *
+     * @throws Exception                If your php build does not support the argon algorithm.
      * @throws InvalidArgumentException If passed an invalid Argon type.
      */
     public function __construct(
         string $type,
-        int $memoryCost = PASSWORD_ARGON2_DEFAULT_MEMORY_COST,
-        int $timeCost = PASSWORD_ARGON2_DEFAULT_TIME_COST,
-        int $threads = PASSWORD_ARGON2_DEFAULT_THREADS
+        int $memoryCost = null,
+        int $timeCost = null,
+        int $threads = null
     ) {
+        // @codeCoverageIgnoreStart
+        if (!defined('PASSWORD_ARGON2I') || !defined('PASSWORD_ARGON2ID')) {
+            throw new Exception('Your php build does not support the argon algorithm.');
+        }
+        // @codeCoverageIgnoreEnd
+
         if (!in_array($type, $types = [static::TYPE_2D, static::TYPE_2I])) {
             throw new InvalidArgumentException(
                 'Passed an invalid Argon type. Available types: ' . join(', ', $types)
             );
+        }
+
+        if ($memoryCost === null) {
+            $memoryCost = PASSWORD_ARGON2_DEFAULT_MEMORY_COST;
+        }
+
+        if ($timeCost === null) {
+            $timeCost = PASSWORD_ARGON2_DEFAULT_TIME_COST;
+        }
+
+        if ($threads === null) {
+            $threads = PASSWORD_ARGON2_DEFAULT_THREADS;
         }
 
         $this->type = $type;
@@ -64,12 +84,15 @@ class Argon implements HashingInterface
      */
     public function hash(string $original): string
     {
-        if ($this->type === static::TYPE_2I) {
-            $type = PASSWORD_ARGON2I;
-        } elseif ($this->type === static::TYPE_2D) {
-            $type = PASSWORD_ARGON2ID;
-        } else {
-            throw new \RuntimeException('Wrong argon type: ' . $this->type);
+        switch ($this->type) {
+            case static::TYPE_2I:
+                $type = 'argon2i';
+                break;
+
+            default:
+            case static::TYPE_2D:
+                $type = 'argon2id';
+                break;
         }
 
         return password_hash($original, $type, [

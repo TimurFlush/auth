@@ -28,14 +28,28 @@ interface SessionInterface
      *
      * @param int|string $id An id of a user.
      */
-    public function setUserId($id);
+    public function setUserId(int $id);
 
     /**
      * Returns an id of a user.
      *
-     * @return int|string|null
+     * @return int|null
      */
-    public function getUserId();
+    public function getUserId(): ?int;
+
+    /**
+     * Sets a remember token.
+     *
+     * @param string $token
+     */
+    public function setRememberToken(string $token);
+
+    /**
+     * Returns a remember token.
+     *
+     * @return string|null
+     */
+    public function getRememberToken(): ?string;
 
     /**
      * Sets a creation time.

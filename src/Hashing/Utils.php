@@ -36,4 +36,23 @@ class Utils
 
         return substr($string, 0, $length);
     }
+
+    /**
+     * Safely compare.
+     *
+     * @param string $first  A first string.
+     * @param string $second A second string.
+     *
+     * @return bool
+     */
+    public static function safelyCompare(string $first, string $second): bool
+    {
+        $diff = strlen($first) ^ strlen($second);
+
+        for ($i = 0; $i < strlen($first) && $i < strlen($second); $i++) {
+            $diff |= ord($first[$i]) ^ ord($second[$i]);
+        }
+
+        return $diff === 0;
+    }
 }
