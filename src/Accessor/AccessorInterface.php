@@ -4,15 +4,66 @@ declare(strict_types=1);
 
 namespace TimurFlush\Auth\Accessor;
 
-interface AccessorInterface
+use TimurFlush\Auth\Checker\CheckerInterface;
+use TimurFlush\Auth\Checker\OptionalCheckerInterface;
+use TimurFlush\Auth\Session\SessionInterface;
+use TimurFlush\Auth\User\UserInterface;
+
+interface StatelessAccessorInterface
 {
-    public function isAuth();
+    /**
+     * Determines if a user is authenticated.
+     *
+     * @return bool
+     */
+    public function isAuth(): bool;
 
-    public function isGuest();
+    /**
+     * Determines whether the user is unauthenticated
+     *
+     * @return bool
+     */
+    public function isGuest(): bool;
 
-    public function setUser();
+    /**
+     * Sets a UserInterface object.
+     *
+     * @param UserInterface $user
+     */
+    public function setUser(UserInterface $user);
 
-    public function getUser();
+    /**
+     * Returns a UserInterface object.
+     *
+     * @return UserInterface|null
+     */
+    public function getUser(): ?UserInterface;
 
-    public function getUserId();
+    /**
+     * Sets a SessionInterface object.
+     *
+     * @param SessionInterface|null $session
+     */
+    public function setSession(?SessionInterface $session);
+
+    /**
+     * Returns a SessionInterface object.
+     *
+     * @return SessionInterface|null
+     */
+    public function getSession(): ?SessionInterface;
+
+    /**
+     * Get a user id.
+     *
+     * @return int|null
+     */
+    public function getUserId(): ?int;
+
+    /**
+     * Get a session id.
+     *
+     * @return string|null
+     */
+    public function getSessionId(): ?string;
 }

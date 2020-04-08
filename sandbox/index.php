@@ -1,17 +1,18 @@
 <?php
-/**
- * @Param int $min_ms Minimum amount of time in milliseconds that it should take
- * to calculate the hashes
- */
-function getOptimalBcryptCostParameter($min_ms = 250) {
-    for ($i = 4; $i < 31; $i++) {
-        $options = [ 'cost' => $i, 'salt' => 'usesomesillystringforsalt' ];
-        $time_start = microtime(true);
-        password_hash("rasmuslerdorf", PASSWORD_BCRYPT, $options);
-        $time_end = microtime(true);
-        if (($time_end - $time_start) * 1000 > $min_ms) {
-            return $i;
-        }
-    }
-}
-echo getOptimalBcryptCostParameter(); // prints 12 in my case
+declare(strict_types=1);
+
+\Phalcon\Helper\Json::decode()
+exit;
+
+$a = new \stdClass();
+$b = new \stdClass();
+
+echo spl_object_id($a) . PHP_EOL;
+echo spl_object_id($b) . PHP_EOL;
+
+exit;
+$a1 = md5( md5('K') . md5('U') . md5('C') . md5('O') . md5('I') . md5('N')  );
+$a2 = md5( md5('2') . md5('0') . md5('2') . md5('0') );
+$a3 = md5(md5('I') . md5('R') . md5('I') . md5('N') . md5('A'));
+
+echo md5($a1 . $a2 . $a3) . PHP_EOL;

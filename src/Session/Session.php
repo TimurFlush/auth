@@ -9,8 +9,8 @@ use Phalcon\Mvc\Model;
 use TimurFlush\Auth\Exception\InvalidArgumentException;
 use TimurFlush\Auth\Manager;
 use TimurFlush\Auth\Session\SessionInterface;
-use TimurFlush\Auth\Support\Phalcon\Model\InteractsWithCreatedAt;
-use TimurFlush\Auth\Support\Phalcon\Model\InteractsWithUpdatedAt;
+use TimurFlush\Auth\Support\Phalcon\InteractsWithCreatedAt;
+use TimurFlush\Auth\Support\Phalcon\InteractsWithUpdatedAt;
 use DateTimeInterface;
 
 abstract class Session extends Model implements SessionInterface
@@ -144,5 +144,21 @@ abstract class Session extends Model implements SessionInterface
         return isset($this->expires_at)
             ? Carbon::createFromFormat(Manager::options('date.format'), $this->expires_at)
             : null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function revoke(): void
+    {
+        $this->expires_at = null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isRevoked(): bool
+    {
+        return $this->expires_at === null;
     }
 }
