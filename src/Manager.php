@@ -4,127 +4,231 @@ declare(strict_types=1);
 
 namespace TimurFlush\Auth;
 
-use TimurFlush\Auth\Exception\InvalidArgumentException;
-use TimurFlush\Auth\Hashing\BCrypt;
-use TimurFlush\Auth\Hashing\HashingInterface;
+use TimurFlush\Auth\Activation\ActivationInterface;
+use TimurFlush\Auth\Activation\RepositoryInterface as ActivationRepository;
+use TimurFlush\Auth\Event\Fireable;
+use TimurFlush\Auth\Event\AfterRegister;
+use TimurFlush\Auth\Event\BeforeRegister;
+use TimurFlush\Auth\Event\NeedActivation;
+use TimurFlush\Auth\Permission\SerializerInterface;
+use TimurFlush\Auth\Policy\PolicyManager;
+use TimurFlush\Auth\Role\RoleInterface;
+use TimurFlush\Auth\Role\RepositoryInterface as RoleRepository;
+use TimurFlush\Auth\User\RepositoryInterface as UserRepository;
+use TimurFlush\Auth\User\UserInterface;
+use Closure;
+use Phalcon\Events\ManagerInterface as EventsManager;
 
-class Manager
+class Manager implements ManagerInterface
 {
-    /**
-     * @var bool
-     */
-    protected static bool $initialized = false;
+    use Fireable;
+
+    public const DEFAULT_SQL_DATE = 'Y-m-d H:i:s.uO';
 
     /**
-     * @var array|null
+     * @var string
      */
-    protected static ?array $options;
+    protected string $sqlDateFormat;
 
     /**
-     * Sets or returns the library options.
+     * @var \TimurFlush\Auth\User\RepositoryInterface
+     */
+    protected UserRepository $userRepository;
+
+    /**
+     * @var \TimurFlush\Auth\Activation\RepositoryInterface
+     */
+    protected ActivationRepository $activationRepository;
+
+    /**
+     * @var \TimurFlush\Auth\Role\RepositoryInterface
+     */
+    protected RoleRepository $roleRepository;
+
+    /**
+     * @var  \TimurFlush\Auth\Permission\SerializerInterface
+     */
+    protected SerializerInterface $permissionsSerializer;
+
+    /**
+     * Manager constructor.
      *
-     * @param null $options
-     * @return mixed
-     *
-     * @throws Exception                If the options are not initialized
-     * @throws InvalidArgumentException If a specified option does not exists.
-     * @throws InvalidArgumentException If a specified option is not a necessary type.
-     * @throws InvalidArgumentException If the `$options` argument is not null, an array or a string.
+     * @param UserRepository        $userRepository
+     * @param ActivationRepository  $activationRepository
+     * @param RoleRepository        $roleRepository
+     * @param SerializerInterface   $permissionsSerializer
+     * @param EventsManager|null    $eventsManager
      */
-    public static function options($options = null)
-    {
-        if (!self::$initialized) {
-            throw new Exception(
-                'Before call the static::options() method, you need to call the static::initialize()'
-            );
-        }
+    public function __construct(
+        UserRepository $userRepository,
+        ActivationRepository $activationRepository,
+        RoleRepository $roleRepository,
+        SerializerInterface $permissionsSerializer,
+        ?EventsManager $eventsManager = null
+    ) {
+        $this->userRepository = $userRepository;
+        $this->activationRepository = $activationRepository;
+        $this->roleRepository = $roleRepository;
+        $this->permissionsSerializer = $permissionsSerializer;
 
-        if ($options === null) {
-            return array_map(
-                fn($value) => $value['value'],
-                static::$options
-            );
-        } elseif (is_string($options)) {
-            if (!isset(static::$options[$options])) {
-                throw new InvalidArgumentException("The `" . $options . "` does not exist.");
-            }
-
-            return static::$options[$options]['value'];
-        } elseif (is_array($options)) {
-            foreach ($options as $key => $value) {
-                if (!isset(static::$options[$key])) {
-                    throw new InvalidArgumentException("The `" . $key . "` does not exist.");
-                }
-
-                $type = static::$options[$key]['type'];
-
-                if (
-                    !(
-                        function_exists($functionName = 'is_' . $type) &&
-                        $functionName($value)
-                    ) &&
-                    !(
-                        $value instanceof $type
-                    )
-                ) {
-                    throw new InvalidArgumentException(
-                        "The `" . $key . "` option must be of the type " . $type
-                    );
-                }
-
-                static::$options[$key]['value'] = $value;
-            }
-        } else {
-            throw new InvalidArgumentException('The `options` argument must be null, string or array.');
+        if ($eventsManager !== null) {
+            $this->setEventsManager($eventsManager);
         }
     }
 
     /**
-     * Initialize options.
+     * Returns a user repository instance.
      *
-     * @return void
+     * @return UserRepository
      */
-    public static function initialize(): void
+    public function getUserRepository(): UserRepository
     {
-        if (static::$initialized) {
-            return;
-        }
-
-        /**
-         * After adding a new item, please also add it to the
-         * the tests/unit/Manager/StateCest::describeDefaultOptions().
-         */
-        $options = [
-            'userModel.allowZeroId' => [
-                'type'  => 'bool',
-                'value' => false
-            ],
-            'userModel.allowNegativeId' => [
-                'type'  => 'bool',
-                'value' => false
-            ],
-            'hashing.default' => [
-                'type'  => HashingInterface::class,
-                'value' => new BCrypt()
-            ],
-            'date.format' => [
-                'type'  => 'string',
-                'value' => 'Y-m-d H:i:s.uO'
-            ],
-        ];
-
-        static::$options = $options;
-        static::$initialized = true;
+        return $this->userRepository;
     }
 
     /**
-     * Resets the state.
+     * Returns an activation repository instance.
      *
-     * @return void
+     * @return ActivationRepository
      */
-    public static function reset(): void
+    public function getActivationRepository(): ActivationRepository
     {
-        static::$options = null;
-        static::$initialized = false;
+        return $this->activationRepository;
+    }
+
+    /**
+     * Returns a role repository instance.
+     *
+     * @return RoleRepository
+     */
+    public function getRoleRepository(): RoleRepository
+    {
+        return $this->roleRepository;
+    }
+
+    /**
+     * Returns a permissions serializer instance.
+     *
+     * @return SerializerInterface
+     */
+    public function getPermissionsSerializer(): SerializerInterface
+    {
+        return $this->permissionsSerializer;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return $this
+     */
+    public function setSqlDateFormat(string $format)
+    {
+        $this->sqlDateFormat = $format;
+        return $this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSqlDateFormat(): string
+    {
+        return isset($this->sqlDateFormat)
+            ? $this->sqlDateFormat
+            : self::DEFAULT_SQL_DATE;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws Exception If the 'activate' argument is not a Closure object or boolean.
+     */
+    public function register(array $credentials, $activate = false): bool
+    {
+        if (($activate instanceof Closure) === false || !is_bool($activate)) {
+            throw new Exception("The 'activate' argument must be a Closure object or boolean.");
+        }
+
+        if ($this->fireEvent(new BeforeRegister($credentials)) === false) {
+            return false;
+        }
+
+        if ($activate instanceof Closure) {
+            $activate = $activate();
+        }
+
+        $user = $this->userRepository->createNewUser($credentials, $activate);
+
+        $this->userRepository->save($user);
+
+        $this->fireEvent(new AfterRegister($user));
+
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function attemptActivate(int $userId, string $activationId): bool
+    {
+        $activation = $this->activationRepository->find($activationId, $userId);
+
+        if ($activation instanceof ActivationInterface) {
+            $user = $this->userRepository->findById($userId);
+
+            if ($user instanceof UserInterface) {
+                return $this->activateByUser($user);
+            }
+
+            $this->activationRepository->delete($activation);
+        }
+
+        return false;
+    }
+
+    public function activateByCredentials(array $credentials)
+    {
+        $user = $this->userRepository->findByCredentials($credentials);
+
+        if ($user instanceof UserInterface) {
+            return $this->activateByUser($user);
+        }
+
+        return false;
+    }
+
+    public function activateByUserId(int $userId): bool
+    {
+        $user = $this->userRepository->findById($userId);
+
+        if ($user instanceof UserInterface) {
+            return $this->activateByUser($user);
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function activateByUser(UserInterface $user): bool
+    {
+        $user->setActivationStatus(true);
+        $this->userRepository->save($user);
+
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function createActivation(UserInterface $user): ActivationInterface
+    {
+        $activation = $this->activationRepository->create($user);
+
+        $this->activationRepository->save($activation);
+
+        $this->fireEvent(new NeedActivation($user, $activation));
+
+        return $activation;
     }
 }

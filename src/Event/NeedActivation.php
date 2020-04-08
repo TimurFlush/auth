@@ -2,29 +2,17 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Event\Object;
+namespace TimurFlush\Auth\Event;
 
 use TimurFlush\Auth\Activation\ActivationInterface;
-use TimurFlush\Auth\Event\EventInterface;
 use TimurFlush\Auth\User\UserInterface;
 
 class NeedActivation implements EventInterface
 {
-    /**
-     * @var \TimurFlush\Auth\User\UserInterface
-     */
     protected UserInterface $user;
 
-    /**
-     * @var \TimurFlush\Auth\Activation\ActivationInterface
-     */
     protected ActivationInterface $activation;
 
-    /**
-     * AfterRegister constructor.
-     *
-     * @param UserInterface              $user
-     */
     public function __construct(
         UserInterface $user,
         ActivationInterface $activation
@@ -43,14 +31,15 @@ class NeedActivation implements EventInterface
 
     /**
      * Returns a user which associated with this event.
-     *
-     * @return UserInterface
      */
     public function getUser(): UserInterface
     {
         return $this->user;
     }
 
+    /**
+     * TODO : NEED COMMENTING
+     */
     public function getActivation(): ActivationInterface
     {
         return $this->activation;

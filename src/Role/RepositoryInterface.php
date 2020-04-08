@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TimurFlush\Auth\Role;
 
-interface RoleRepositoryInterface
+interface RepositoryInterface
 {
-    public function findById(int $id): ?RoleInterface;
+    public function findByName(string $name): ?RoleInterface;
 }

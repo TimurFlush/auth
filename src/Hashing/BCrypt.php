@@ -26,7 +26,7 @@ class BCrypt implements HashingInterface
      */
     public function hash(string $original): string
     {
-        return password_hash($original, PASSWORD_BCRYPT, [
+        return 'bcrypt' . password_hash($original, PASSWORD_BCRYPT, [
             'cost' => $this->cost
         ]);
     }
@@ -37,5 +37,13 @@ class BCrypt implements HashingInterface
     public function check(string $original, string $hashed): bool
     {
         return password_verify($original, $hashed);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isMyHash(string $hash): bool
+    {
+        return strpos($hash, '$2y$') === 0;
     }
 }

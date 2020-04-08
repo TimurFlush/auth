@@ -4,25 +4,20 @@ declare(strict_types=1);
 
 namespace TimurFlush\Auth\Accessor;
 
-use TimurFlush\Auth\Event\ManagerInterface as EventsManager;
+use Phalcon\Events\EventsAwareInterface;
+use Phalcon\Events\ManagerInterface as EventsManager;
+use TimurFlush\Auth\Event\Fireable;
 use TimurFlush\Auth\Session\SessionInterface;
 use TimurFlush\Auth\User\UserInterface;
 
-abstract class AccessorInterfaceAbstract implements StatelessAccessorInterface
+abstract class AccessorAbstract implements AccessorInterface, EventsAwareInterface
 {
-    /**
-     * @var UserInterface
-     */
+    use Fireable;
+
     protected UserInterface $user;
 
-    /**
-     * @var SessionInterface
-     */
     protected SessionInterface $session;
 
-    /**
-     * @var EventsManager
-     */
     protected EventsManager $eventsManager;
 
     /**
@@ -65,7 +60,7 @@ abstract class AccessorInterfaceAbstract implements StatelessAccessorInterface
      *
      * @return $this
      */
-    public function setSession(SessionInterface $session)
+    public function setSession(?SessionInterface $session)
     {
         $this->session = $session;
         return $this;
@@ -97,21 +92,5 @@ abstract class AccessorInterfaceAbstract implements StatelessAccessorInterface
         return $this->isAuth()
             ? $this->getSession()->getId()
             : null;
-    }
-
-    /**
-     * @param string $name
-     * @param mixed  $source
-     * @param mixed  $data
-     *
-     * @return mixed
-     */
-    public function fireEvent(string $name, $source, $data = null)
-    {
-        if (isset($this->eventsManager)) {
-            return $this->eventsManager->fire($name, $source, $data);
-        }
-
-        return true;
     }
 }

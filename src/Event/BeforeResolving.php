@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Event\Object;
-
-use TimurFlush\Auth\Event\EventInterface;
+namespace TimurFlush\Auth\Event;
 
 class BeforeResolving extends ResolvingAbstract implements EventInterface
 {

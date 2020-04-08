@@ -2,42 +2,33 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Event\Object;
+namespace TimurFlush\Auth\Event;
 
-use TimurFlush\Auth\Accessor\StatelessAccessorInterface;
-use TimurFlush\Auth\Event\EventInterface;
+use TimurFlush\Auth\Accessor\AccessorInterface;
 use TimurFlush\Auth\Session\SessionInterface;
 use TimurFlush\Auth\User\UserInterface;
 
 class BeforeAuth implements EventInterface
 {
-    /**
-     * @var UserInterface
-     */
     protected UserInterface $user;
 
-    /**
-     * @var SessionInterface
-     */
     protected SessionInterface $session;
 
-    /**
-     * @var StatelessAccessorInterface
-     */
-    protected StatelessAccessorInterface $statelessAccessor;
+    protected AccessorInterface $statelessAccessor;
 
-    /**
-     * BeforeAuth constructor.
-     *
-     * @param UserInterface              $user
-     * @param StatelessAccessorInterface $statelessAccessor
-     */
+    protected bool $isOnce;
+
     public function __construct(
-        StatelessAccessorInterface $statelessAccessor,
-        UserInterface $user
+        AccessorInterface $statelessAccessor,
+        UserInterface $user,
+        bool $isOnce = null
     ) {
         $this->user = $user;
         $this->statelessAccessor = $statelessAccessor;
+
+        if (is_bool($isOnce)) {
+            $this->isOnce = $isOnce;
+        }
     }
 
     /**
@@ -50,8 +41,6 @@ class BeforeAuth implements EventInterface
 
     /**
      * Returns a user which associated with this event.
-     *
-     * @return UserInterface
      */
     public function getUser(): UserInterface
     {
@@ -60,13 +49,21 @@ class BeforeAuth implements EventInterface
 
     /**
      * Returns a stateless accessor which associated with this event.
-     *
-     * @return StatelessAccessorInterface|null
      */
-    public function getStatelessAccessor(): ?StatelessAccessorInterface
+    public function getStatelessAccessor(): ?AccessorInterface
     {
         return isset($this->statelessAccessor)
             ? $this->statelessAccessor
             : null;
+    }
+
+    /**
+     * Determines whether this authentication attempt is temporary.
+     */
+    public function isOnce(): bool
+    {
+        return isset($this->isOnce)
+            ? $this->isOnce
+            : false;
     }
 }

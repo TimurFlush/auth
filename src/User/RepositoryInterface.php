@@ -9,9 +9,12 @@ interface RepositoryInterface
     /**
      * Creates an empty user.
      *
+     * @param array $credentials
+     * @param bool  $activate
+     *
      * @return UserInterface
      */
-    public function createNewUser(): UserInterface;
+    public function createNewUser(array $credentials, bool $activate = false): UserInterface;
 
     /**
      * Searches a user by his identity.
@@ -30,6 +33,15 @@ interface RepositoryInterface
      * @return UserInterface|null
      */
     public function findByCredentials(array $credentials): ?UserInterface;
+
+    /**
+     * Searches a user by his api token
+     *
+     * @param string $apiToken
+     *
+     * @return UserInterface|null
+     */
+    public function findByApiToken(string $apiToken): ?UserInterface;
 
     /**
      * Saves a user to persistent storage.

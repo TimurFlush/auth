@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TimurFlush\Auth\Permission;
 
-interface PermissionsSerializerInterface
+interface SerializerInterface
 {
     /**
      * Serializes permissions.

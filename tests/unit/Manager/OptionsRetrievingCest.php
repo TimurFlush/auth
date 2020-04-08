@@ -36,11 +36,11 @@ class OptionsRetrievingCest
             ],
             //
             [
-                'name'  => 'hashing.default',
+                'name'  => 'hashing',
                 'value' => Stub::makeEmpty(Argon::class)
             ],
             [
-                'name'   => 'hashing.default',
+                'name'   => 'hashing',
                 'value'  => Stub::makeEmpty(HashingInterface::class)
             ],
             //

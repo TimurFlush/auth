@@ -109,4 +109,12 @@ class Argon implements HashingInterface
     {
         return password_verify($original, $hashed);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isMyHash(string $hash): bool
+    {
+        return strpos($hash, '$argon') === 0;
+    }
 }

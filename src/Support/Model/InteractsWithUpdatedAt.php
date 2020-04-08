@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Support\Phalcon\Model;
+namespace TimurFlush\Auth\Support\Model;
 
 use Carbon\Carbon;
 use Phalcon\Mvc\Model\Behavior\Timestampable;
@@ -24,14 +24,21 @@ trait InteractsWithUpdatedAt
      */
     protected function applyUpdatedAtBehavior(): void
     {
+        /**
+         * @var Manager $authManager
+         */
+        $authManager = $this
+            ->getDI()
+            ->getShared('authManager');
+
         $this->addBehavior(
             new Timestampable(
                 [
                     'beforeValidationOnUpdate' => [
                         'field' => 'updated_at',
-                        'generator' => function () {
+                        'generator' => function () use ($authManager) {
                             $imm = new \DateTimeImmutable('NOW');
-                            return $imm->format(Manager::options('date.format'));
+                            return $imm->format($authManager->getSqlDateFormat());
                         }
                     ]
                 ]
@@ -45,13 +52,17 @@ trait InteractsWithUpdatedAt
      * @param DateTimeInterface $dateTime
      *
      * @return $this
-     *
-     * @throws InvalidArgumentException   Please see the method `TimurFlush\Auth\Manager::options()`
-     * @throws \TimurFlush\Auth\Exception Please see the method `TimurFlush\Auth\Manager::options()`
      */
     public function setUpdatedAt(DateTimeInterface $dateTime)
     {
-        $this->updated_at = $dateTime->format(Manager::options('date.format'));
+        /**
+         * @var Manager $authManager
+         */
+        $authManager = $this
+            ->getDI()
+            ->getShared('authManager');
+
+        $this->updated_at = $dateTime->format($authManager->getSqlDateFormat());
         return $this;
     }
 
@@ -59,14 +70,18 @@ trait InteractsWithUpdatedAt
      * Returns an update time.
      *
      * @return Carbon|null
-     *
-     * @throws InvalidArgumentException   Please see the method `TimurFlush\Auth\Manager::options()`
-     * @throws \TimurFlush\Auth\Exception Please see the method `TimurFlush\Auth\Manager::options()`
      */
     public function getUpdatedAt(): ?Carbon
     {
+        /**
+         * @var Manager $authManager
+         */
+        $authManager = $this
+            ->getDI()
+            ->getShared('authManager');
+
         return isset($this->updated_at)
-            ? Carbon::createFromFormat(Manager::options('date.format'), $this->updated_at)
+            ? Carbon::createFromFormat($authManager->getSqlDateFormat(), $this->updated_at)
             : null;
     }
 }

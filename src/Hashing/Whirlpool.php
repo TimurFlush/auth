@@ -77,4 +77,12 @@ class Whirlpool implements HashingInterface
             hash('whirlpool', $salt . $original)
         );
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isMyHash(string $hash): bool
+    {
+        return strpos($hash, 'whirlpool.') === 0;
+    }
 }

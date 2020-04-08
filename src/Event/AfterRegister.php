@@ -2,24 +2,16 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Event\Object;
+namespace TimurFlush\Auth\Event;
 
-use TimurFlush\Auth\Event\EventInterface;
 use TimurFlush\Auth\User\UserInterface;
 
 class AfterRegister implements EventInterface
 {
-    /**
-     * @var UserInterface
-     */
     protected UserInterface $user;
 
-    /**
-     * AfterRegister constructor.
-     *
-     * @param UserInterface              $user
-     */
-    public function __construct(UserInterface $user) {
+    public function __construct(UserInterface $user)
+    {
         $this->user = $user;
     }
 
@@ -33,8 +25,6 @@ class AfterRegister implements EventInterface
 
     /**
      * Returns a user which associated with this event.
-     *
-     * @return UserInterface
      */
     public function getUser(): UserInterface
     {
