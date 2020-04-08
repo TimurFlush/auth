@@ -2,37 +2,20 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Event\Object;
+namespace TimurFlush\Auth\Event;
 
 use TimurFlush\Auth\Accessor\StatefulAccessorInterface;
-use TimurFlush\Auth\Event\EventInterface;
 use TimurFlush\Auth\Session\SessionInterface;
 use TimurFlush\Auth\User\UserInterface;
 
 class Logout implements EventInterface
 {
-    /**
-     * @var StatefulAccessorInterface
-     */
     protected StatefulAccessorInterface $statefulAccessor;
 
-    /**
-     * @var UserInterface
-     */
     protected UserInterface $user;
 
-    /**
-     * @var SessionInterface|null
-     */
     protected ?SessionInterface $session;
 
-    /**
-     * Logout constructor.
-     *
-     * @param StatefulAccessorInterface $statefulAccessor
-     * @param UserInterface             $user
-     * @param SessionInterface|null     $session
-     */
     public function __construct(
         StatefulAccessorInterface $statefulAccessor,
         UserInterface $user,
@@ -53,8 +36,6 @@ class Logout implements EventInterface
 
     /**
      * Returns a stateful accessor which associated with this event.
-     *
-     * @return StatefulAccessorInterface
      */
     public function getStatefulAccessor(): StatefulAccessorInterface
     {
@@ -63,8 +44,6 @@ class Logout implements EventInterface
 
     /**
      * Returns a user which associated with this event.
-     *
-     * @return UserInterface
      */
     public function getUser(): UserInterface
     {
@@ -73,8 +52,6 @@ class Logout implements EventInterface
 
     /**
      * Returns a session which associated with this event.
-     *
-     * @return SessionInterface|null
      */
     public function getSession(): ?SessionInterface
     {

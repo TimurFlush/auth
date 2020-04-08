@@ -4,85 +4,152 @@ declare(strict_types=1);
 
 namespace TimurFlush\Auth\Accessor;
 
-use TimurFlush\Auth\Accessor\PhpSession\AdapterInterface;
-use TimurFlush\Auth\Cookies\CookiesInterface;
-use TimurFlush\Auth\Event\ManagerInterface as EventsManager;
+use TimurFlush\Auth\Accessor\PhpSession\CookieOptions;
 use TimurFlush\Auth\Exception\InvalidArgumentException;
-use TimurFlush\Auth\Session\RepositoryInterface;
-use TimurFlush\Auth\Session\SessionInterface;
-use TimurFlush\Auth\User\RepositoryInterface as UserRepository;
-use TimurFlush\Auth\User\UserInterface;
-use TimurFlush\Auth\Session\RepositoryInterface as SessionRepository;
+use Phalcon\Events\ManagerInterface as EventsManager;
+use TimurFlush\Auth\Event\{
+    BeforeAuth,
+    AfterAuth,
+    BeforeResolving,
+    AfterResolving,
+    FailedChecker,
+    Logout
+};
+use TimurFlush\Auth\Session\{
+    RepositoryInterface as SessionRepository,
+    SessionInterface
+};
+use TimurFlush\Auth\User\{
+    RepositoryInterface as UserRepository,
+    UserInterface
+};
+use TimurFlush\Auth\Checker\Credentials;
+use Phalcon\Session\ManagerInterface as PhalconSession;
+use Phalcon\Http\Response\CookiesInterface as PhalconCookies;
+use JsonException;
 
-class PhpSessionInterface extends AccessorInterfaceAbstract implements StatefulAccessorInterface
+class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
 {
     protected const RESOLVING_VIA_PHP_SESSION = 0;
     protected const RESOLVING_VIA_COOKIES = 1;
 
-    /**
-     * @var string
-     */
     protected string $moduleName;
 
-    /**
-     * @var \TimurFlush\Auth\Accessor\PhpSession\AdapterInterface
-     */
-    protected AdapterInterface $adapter;
+    protected PhalconSession $phalconSession;
 
-    /**
-     * @var \TimurFlush\Auth\User\RepositoryInterface
-     */
     protected UserRepository $userRepository;
 
-    /**
-     * @var \TimurFlush\Auth\Session\RepositoryInterface
-     */
     protected SessionRepository $sessionRepository;
 
-    /**
-     * @var \TimurFlush\Auth\Cookies\CookiesInterface
-     */
-    protected CookiesInterface $cookies;
+    protected PhalconCookies $phalconCookies;
 
     /**
-     * PhpSessionInterface constructor.
+     * @var \TimurFlush\Auth\Checker\OptionalCheckerInterface[]
+     */
+    protected array $checkers = [];
+
+    protected CookieOptions $cookieOptions;
+
+    /**
+     * PhpSession constructor.
      *
-     * @param string                                                $module            A module name to save sessions with prefix.
-     * @param \TimurFlush\Auth\Accessor\PhpSession\AdapterInterface $adapter
+     * @param string                                                $module            A module name to save sessions and cookies with prefix.
+     * @param \Phalcon\Session\ManagerInterface                     $phalconSession
+     * @param \Phalcon\Http\Response\CookiesInterface               $phalconCookies
      * @param \TimurFlush\Auth\User\RepositoryInterface             $userRepository
      * @param \TimurFlush\Auth\Session\RepositoryInterface          $sessionRepository
-     * @param \TimurFlush\Auth\Event\ManagerInterface               $eventsManager
+     * @param \TimurFlush\Auth\Checker\OptionalCheckerInterface[]   $checkers
+     * @param \Phalcon\Events\ManagerInterface                      $eventsManager
+     * @param \TimurFlush\Auth\Accessor\PhpSession\CookieOptions    $cookieOptions     The custom cookie's options.
      */
     public function __construct(
         string $module,
-        AdapterInterface $adapter,
+        PhalconSession $phalconSession,
+        PhalconCookies $phalconCookies,
         UserRepository $userRepository,
-        RepositoryInterface $sessionRepository,
-        CookiesInterface $cookies,
-        EventsManager $eventsManager = null
+        SessionRepository $sessionRepository,
+        array $checkers = [],
+        ?EventsManager $eventsManager = null,
+        ?CookieOptions $cookieOptions = null
     ) {
-        $adapter->setModuleName($module);
-        $cookies->setModuleName($module);
-
         $this->moduleName = $module;
-        $this->adapter = $adapter;
+        $this->phalconSession = $phalconSession;
+        $this->phalconCookies = $phalconCookies;
         $this->userRepository = $userRepository;
         $this->sessionRepository = $sessionRepository;
-        $this->cookies = $cookies;
+        $this->checkers = $checkers;
 
-        if ($eventsManager) {
-            $this->eventsManager = $eventsManager;
+        if ($eventsManager !== null) {
+            $this->setEventsManager($eventsManager);
+        }
+
+        if ($cookieOptions !== null) {
+            $this->setCookieOptions($cookieOptions);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws InvalidArgumentException Please see the method `static::resolveViaPhpSession()`
+     * @throws InvalidArgumentException Please see the method `static::resolveViaCookies()`
+     */
+    public function getUser(): ?UserInterface
+    {
+        if (isset($this->user)) {
+            return $this->user;
+        }
 
-    protected function resolve(int $method, $userId, $sessionId, string $rememberToken = null)
+        $isResolved = $this->resolveViaPhpSession();
+
+        if (!$isResolved) {
+            $this->resolveViaCookies();
+        }
+
+        return isset($this->user)
+            ? $this->user
+            : null;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws InvalidArgumentException
+     */
+    public function getSession(): ?SessionInterface
+    {
+        if (isset($this->session)) {
+            return $this->session;
+        }
+
+        $isResolved = $this->resolveViaPhpSession();
+
+        if (!$isResolved) {
+            $this->resolveViaCookies();
+        }
+
+        return isset($this->session)
+            ? $this->session
+            : null;
+    }
+
+    /**
+     * Resolve a user.
+     *
+     * @param int         $method
+     * @param mixed       $userId
+     * @param mixed       $sessionId
+     * @param string|null $rememberToken
+     *
+     * @return bool
+     *
+     * @throws InvalidArgumentException If specified an unknown resolving method
+     */
+    protected function resolve(int $method, $userId, $sessionId, $rememberToken = null): bool
     {
         if (
-            !in_array($method, [
-                static::RESOLVING_VIA_PHP_SESSION,
-                static::RESOLVING_VIA_COOKIES
-            ])
+            $method !== static::RESOLVING_VIA_PHP_SESSION ||
+            $method !== static::RESOLVING_VIA_COOKIES
         ) {
             throw new InvalidArgumentException('Unknown resolving method');
         }
@@ -104,11 +171,7 @@ class PhpSessionInterface extends AccessorInterfaceAbstract implements StatefulA
             /**
              * Check data types
              */
-            if (!is_int($userId)) {
-                $fail = true;
-                break;
-            }
-            if (!is_string($sessionId)) {
+            if (!is_int($userId) || !is_string($sessionId)) {
                 $fail = true;
                 break;
             }
@@ -166,28 +229,49 @@ class PhpSessionInterface extends AccessorInterfaceAbstract implements StatefulA
             }
 
             /**
-             * Check the user for blocking and activation
+             * Check the user for some restrictions via checkers
+             */
+            foreach ($this->checkers as $checker) {
+                if ($checker->onValidation($matchedUser) === false) {
+                    $fail = $needRevoke = true;
+
+                    $this->fireEvent(
+                        new FailedChecker(
+                            $checker,
+                            $matchedUser,
+                            FailedChecker::ON_VALIDATION,
+                            $matchedSession
+                        )
+                    );
+                    break;
+                }
+            }
+
+            /**
+             * Check the user for some restrictions via event
              */
             if (
-                $matchedUser->getBanStatus() === true ||
-                $matchedUser->getActivationStatus() === false
+                $this->fireEvent(
+                    new BeforeResolving(
+                        $matchedUser,
+                        $matchedSession,
+                        $this,
+                        $method
+                    )
+                ) === false
             ) {
                 $fail = $needRevoke = true;
                 break;
             }
 
-            $eventData = [
-                'user' => $matchedUser,
-                'session' => $matchedSession,
-                'module' => $this->moduleName,
-                'resolvingType' => $method
-            ];
-
-            if (
-                $this->fireEvent('customChecksOnResolving', $this, $eventData) === false
-            ) {
-
-            }
+            $this->fireEvent(
+                new AfterResolving(
+                    $matchedUser,
+                    $matchedSession,
+                    $this,
+                    $method
+                )
+            );
         } while (false);
 
         /**
@@ -196,330 +280,278 @@ class PhpSessionInterface extends AccessorInterfaceAbstract implements StatefulA
          */
         if ($fail) {
             if ($method === static::RESOLVING_VIA_PHP_SESSION) {
-                $this->adapter->remove();
-            } elseif ($method === static::RESOLVING_VIA_COOKIES) {
-                $this->cookies->remove();
+                $this->phalconSession->remove($this->getSessionKey());
             }
+
+            $this->phalconCookies->delete($this->getCookiesKey());
 
             if ($needRevoke && $matchedSession) {
                 $matchedSession->revoke();
                 $this->sessionRepository->save($matchedSession);
             }
-        }
-    }
 
-    public function resolveViaPhpSession(): bool
-    {
-        $phpSession = $this->adapter->get();
-
-        if (!isset($phpSession['userId'], $phpSession['sessionId'])) {
             return false;
         }
 
-        $this->resolve(
-            static::RESOLVING_VIA_PHP_SESSION,
-            $phpSession['userId'],
-            $phpSession['sessionId']
-        );
-
-        return;
-
-
-        if (
-            !is_int($userId) ||
-            !is_string($sessionId)
-        ) {
-            $this->adapter->remove();
-            return false;
-        } // Z
-
-        $session = $this->sessionRepository->findById($sessionId); // Z
-
-        if (($session instanceof SessionInterface) === false) { // Z
-            $this->cookies->remove();
-            return false;
-        }
-
-        $expiresAt = $session->getExpiresAt(); // Z
-
-        // Is revoked?
-        if ($session->isRevoked()) { // Z
-            $this->cookies->remove();
-            return false;
-        }
-
-        // Is past?
-        if ($expiresAt->isPast()) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        $userId = $session->getUserId(); // Z
-
-        if ($userId === null) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        $user = $this->userRepository->findById((int)$userId); // Z
-
-        if (($user instanceof UserInterface) === false) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        if (
-            $user->getBanStatus() === true ||
-            $user->getActivationStatus() === false
-        ) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        $eventData = [
-            'user' => $user,
-            'session' => $session,
-            'module' => $this->moduleName
-        ]; // Z
-
-        if (
-            $this->fireEvent('customChecksOnResolvingViaCookies', $this, $eventData) === false ||
-            $this->fireEvent('customChecksOnResolving', $this, $eventData) === false
-        ) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-    }
-
-    public function resolveViaCookies(): bool
-    {
-        $cookies = $this->cookies->get();
-
-        if ($cookies === null) {
-            return false;
-        } elseif (!is_array($cookies)) {
-            $this->cookies->remove();
-            return false;
-        }
-
-        // TODO : Complete this and think about the multi-accessor mode in $this->adapter & $this->cookies
-
-        $sessionId = $cookies['sessionId'] ?? null; // Z
-        $rememberToken = $cookies['rememberToken'] ?? null; // Z
-
-        if (
-            !is_string($sessionId) ||
-            !is_string($rememberToken)
-        ) {
-            $this->cookies->remove();
-            return false;
-        } // Z
-
-        $session = $this->sessionRepository->findById($sessionId); // Z
-
-        if (($session instanceof SessionInterface) === false) { // Z
-            $this->cookies->remove();
-            return false;
-        }
-
-        $expiresAt = $session->getExpiresAt(); // Z
-
-        // Is revoked?
-        if ($session->isRevoked()) { // Z
-            $this->cookies->remove();
-            return false;
-        }
-
-        // Is past?
-        if ($expiresAt->isPast()) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        // Is remember tokens not equals?
-        if ($rememberToken !== $session->getRememberToken()) {
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        $userId = $session->getUserId(); // Z
-
-        if ($userId === null) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        $user = $this->userRepository->findById((int)$userId); // Z
-
-        if (($user instanceof UserInterface) === false) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        if (
-            $user->getBanStatus() === true ||
-            $user->getActivationStatus() === false
-        ) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        $eventData = [
-            'user' => $user,
-            'session' => $session,
-            'module' => $this->moduleName
-        ]; // Z
-
-        if (
-            $this->fireEvent('customChecksOnResolvingViaCookies', $this, $eventData) === false ||
-            $this->fireEvent('customChecksOnResolving', $this, $eventData) === false
-        ) { // Z
-            $session->revoke();
-
-            $this->sessionRepository->save($session);
-
-            $this->cookies->remove();
-            return false;
-        }
-
-        $this->adapter->set(
-            [
-                'userId' => $user->getId(),
-                'sessionId' => $session->getId()
-            ]
-        );
-
-        $this->setUser($user);
-        $this->setSession($session);
+        $this
+            ->setUser($matchedUser)
+            ->setSession($matchedSession);
 
         return true;
     }
 
     /**
-     * Get an unique session key.
-     *
-     * @return string
+     * @throws InvalidArgumentException Please see the method `static::resolve()`
      */
-    public function getSessionKey(): string
+    public function resolveViaPhpSession(): bool
     {
-        return join('_' , [
-            'TF_Accessor',
-            $this->moduleName,
-            sha1(static::class)
-        ]);
+        $session = $this->phalconSession->get($this->getSessionKey());
+
+        if (!isset($session['userId'], $session['sessionId'])) {
+            return false;
+        }
+
+        return $this->resolve(
+            static::RESOLVING_VIA_PHP_SESSION,
+            $session['userId'],
+            $session['sessionId']
+        );
     }
 
-    public function attemptLogin(array $credentials, bool $remember = false): bool
+    /**
+     * @throws InvalidArgumentException Please see the method `static::resolve()`
+     */
+    public function resolveViaCookies(): bool
+    {
+        $cookies = $this
+            ->phalconCookies
+            ->get($this->getCookiesKey())
+            ->getValue();
+
+        if (!is_string($cookies)) {
+            return false;
+        }
+
+        try {
+            $cookies = json_decode($cookies, true, 2, JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            $this->phalconCookies->delete($this->getCookiesKey());
+            return false;
+        }
+
+        if (!isset($cookies['userId'], $cookies['sessionId'], $cookies['rememberToken'])) {
+            return false;
+        }
+
+        return $this->resolve(
+            static::RESOLVING_VIA_COOKIES,
+            $cookies['userId'],
+            $cookies['sessionId'],
+            $cookies['rememberToken']
+        );
+    }
+
+    /**
+     * Sets cookie's options.
+     */
+    public function setCookieOptions(CookieOptions $cookieOptions): void
+    {
+        $this->cookieOptions = $cookieOptions;
+    }
+
+    /**
+     * Returns cookie's options.
+     */
+    public function getCookieOptions(): CookieOptions
+    {
+        return $this->cookieOptions ??= new CookieOptions();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getModuleName(): string
+    {
+        return $this->moduleName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function attemptLogin(
+        array $credentials,
+        bool $remember = false,
+        array $extraCheckers = [],
+        bool $replaceCheckers = false
+    ): bool
     {
         $user = $this->userRepository->findByCredentials($credentials);
 
-        if ($user instanceof UserInterface && $user->checkCredentials($credentials)) {
-            return $this->loginByUser($user, $remember);
+        if ($user instanceof UserInterface) {
+            $credentialsChecker = new Credentials($credentials);
+            $result = $credentialsChecker->onAuthentication($user);
+
+            if ($result === true) {
+                return $this->loginByUser($user, $remember, $extraCheckers, $replaceCheckers);
+            } else {
+                $this->fireEvent(
+                    new FailedChecker(
+                        $credentialsChecker,
+                        $user,
+                        FailedChecker::ON_AUTHENTICATION
+                    )
+                );
+            }
         }
 
         return false;
     }
 
-    public function loginByUser(UserInterface $user, bool $remember = false): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function loginByUser(
+        UserInterface $user,
+        bool $remember = false,
+        array $extraCheckers = [],
+        bool $replaceCheckers = false
+    ): bool
     {
-        if ($this->fireEvent('beforeAuth', $this, ['user' => $user]) === false) {
+        $checkers = $this->checkers;
+
+        if ($replaceCheckers === true) {
+            $this->checkers = [];
+        }
+
+        array_unshift($checkers, ...$extraCheckers);
+
+        /**
+         * First: we need to check a user on restrictions via checkers
+         */
+        foreach ($checkers as $checker) {
+            if ($checker->onAuthentication($user) === false) {
+                $this->fireEvent(
+                    new FailedChecker(
+                        $checker,
+                        $user,
+                        FailedChecker::ON_AUTHENTICATION
+                    )
+                );
+                return false;
+            }
+        }
+
+        /**
+         * Second: we need to check a user on restrictions via event
+         */
+        if ($this->fireEvent(new BeforeAuth($this, $user)) === false) {
             return false;
         }
 
-        $session = $this->sessionRepository->createNewSession($user);
+        $session = $this->sessionRepository->createNewSession($user, $remember);
 
         $data = [
             'userId' => $user->getId(),
             'sessionId' => $session->getId()
         ];
 
+        if ($remember) {
+            $data['rememberToken'] = $session->getRememberToken();
+
+            $cookieOptions = $this->getCookieOptions();
+
+            $this->phalconCookies->set(
+                $this->getCookiesKey(),
+                json_encode($data, JSON_THROW_ON_ERROR, 2),
+                time() + 86400 * 365 * 5,
+                $cookieOptions->getPath(),
+                $cookieOptions->isSecure(),
+                $cookieOptions->getDomain(),
+                $cookieOptions->isHttpOnly(),
+                $cookieOptions->getCustomOptions()
+            );
+        }
+
         # Create php session
-        $this->adapter->set($this->getSessionKey(), $data);
+        $this->phalconSession->set($this->getSessionKey(), $data);
 
         # Create user session
         $this->sessionRepository->save($session);
 
-        $this->setUser($user);
-        $this->setSession($session);
+        $this
+            ->setUser($user)
+            ->setSession($session);
 
-        $this->fireEvent('afterAuth', $this, [
-            'user' => $user,
-            'session' => $session
-        ]);
+        $this->fireEvent(new AfterAuth($this, $user, $session));
 
         return true;
     }
 
-    public function loginById(int $userId, bool $remember = false): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function loginById(
+        int $userId,
+        bool $remember = false,
+        array $extraCheckers = [],
+        bool $replaceCheckers = false
+    ): bool
     {
         $user = $this->userRepository->findById($userId);
 
         if ($user instanceof UserInterface) {
-            return $this->loginByUser($user, $remember);
+            return $this->loginByUser($user, $remember, $extraCheckers, $replaceCheckers);
         }
 
         return false;
     }
 
-    public function loginByUserOnce(UserInterface $user): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function loginByUserOnce(UserInterface $user, array $extraCheckers = []): bool
     {
-        $this->setUser($user);
+        if ($this->fireEvent(new BeforeAuth($this, $user, true)) === false) {
+            return false;
+        }
+
+        foreach ($extraCheckers as $checker) {
+            if ($checker->onAuthentication($user) === false) {
+                $this->fireEvent(
+                    new FailedChecker(
+                        $checker,
+                        $user,
+                        FailedChecker::ON_AUTHENTICATION
+                    )
+                );
+                break;
+            }
+        }
+
+        $this
+            ->setUser($user)
+            ->setSession(null);
 
         return true;
     }
 
-    public function loginByIdOnce(int $userId): bool
+    /**
+     * {@inheritDoc}
+     */
+    public function loginByIdOnce(int $userId, array $extraCheckers = []): bool
     {
         $user = $this->userRepository->findById($userId);
 
-        if ($user instanceof UserInterface) {
-            $this->setUser($user);
-            return true;
+        if ($user !== null) {
+            return $this->loginByUserOnce($user, $extraCheckers);
         }
 
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function isAuthViaRemember(): bool
     {
         if (isset($this->session)) {
@@ -529,16 +561,27 @@ class PhpSessionInterface extends AccessorInterfaceAbstract implements StatefulA
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function isAuthViaOnce(): bool
+    {
+        return isset($this->user) && !isset($this->session);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function logout(): void
     {
         $user = null;
         $session = null;
 
         // delete cookie
-        // TODO : Deleting from cookies
+        $this->phalconCookies->delete($this->getCookiesKey());
 
         // delete php session
-        $this->adapter->remove($this->getSessionKey());
+        $this->phalconSession->remove($this->getSessionKey());
 
         // unlink a user from this class
         if (isset($this->user)) {
@@ -551,7 +594,7 @@ class PhpSessionInterface extends AccessorInterfaceAbstract implements StatefulA
             $session = $this->session;
 
             // revoke a session
-            $this->session->setExpiresAt(null);
+            $this->session->revoke();
 
             // save a session
             $this->sessionRepository->save($this->session);
@@ -559,9 +602,24 @@ class PhpSessionInterface extends AccessorInterfaceAbstract implements StatefulA
             unset($this->session);
         }
 
-        $this->fireEvent('logout', $this, [
-            'user' => $user,
-            'session' => $session
-        ]);
+        if (isset($user)) {
+            $this->fireEvent(new Logout($this, $user, $session));
+        }
+    }
+
+    /**
+     * Returns an unique session key for this accessor.
+     */
+    protected function getSessionKey(): string
+    {
+        return 'TFAccessor-' . $this->moduleName;
+    }
+
+    /**
+     * Returns an unique cookie key for this accessor.
+     */
+    protected function getCookiesKey(): string
+    {
+        return $this->getCookieOptions()->getPrefixedName() . '-' . $this->moduleName;
     }
 }

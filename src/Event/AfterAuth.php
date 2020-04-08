@@ -2,39 +2,22 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Event\Object;
+namespace TimurFlush\Auth\Event;
 
-use TimurFlush\Auth\Accessor\StatelessAccessorInterface;
-use TimurFlush\Auth\Event\EventInterface;
+use TimurFlush\Auth\Accessor\AccessorInterface;
 use TimurFlush\Auth\Session\SessionInterface;
 use TimurFlush\Auth\User\UserInterface;
 
 class AfterAuth implements EventInterface
 {
-    /**
-     * @var UserInterface
-     */
     protected UserInterface $user;
 
-    /**
-     * @var SessionInterface
-     */
     protected SessionInterface $session;
 
-    /**
-     * @var StatelessAccessorInterface
-     */
-    protected StatelessAccessorInterface $statelessAccessor;
+    protected AccessorInterface $statelessAccessor;
 
-    /**
-     * AfterAuth constructor.
-     *
-     * @param UserInterface              $user
-     * @param SessionInterface           $session
-     * @param StatelessAccessorInterface $statelessAccessor
-     */
     public function __construct(
-        StatelessAccessorInterface $statelessAccessor,
+        AccessorInterface $statelessAccessor,
         UserInterface $user,
         SessionInterface $session
     ) {
@@ -44,7 +27,7 @@ class AfterAuth implements EventInterface
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the event name.
      */
     public function getName(): string
     {
@@ -53,8 +36,6 @@ class AfterAuth implements EventInterface
 
     /**
      * Returns a user which associated with this event.
-     *
-     * @return UserInterface
      */
     public function getUser(): UserInterface
     {
@@ -63,8 +44,6 @@ class AfterAuth implements EventInterface
 
     /**
      * Returns a session which associated with this event.
-     *
-     * @return SessionInterface
      */
     public function getSession(): SessionInterface
     {
@@ -73,10 +52,8 @@ class AfterAuth implements EventInterface
 
     /**
      * Returns a stateless accessor which associated with this event.
-     *
-     * @return StatelessAccessorInterface|null
      */
-    public function getStatelessAccessor(): ?StatelessAccessorInterface
+    public function getStatelessAccessor(): ?AccessorInterface
     {
         return isset($this->statelessAccessor)
             ? $this->statelessAccessor

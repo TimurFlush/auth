@@ -6,7 +6,7 @@ namespace TimurFlush\Auth\Hashing;
 
 use Closure;
 
-interface LocatorInterface
+interface HashingLocatorInterface
 {
     /**
      * Register a closure function which will be provide a HashingInterface object.
@@ -25,11 +25,4 @@ interface LocatorInterface
      * @return HashingInterface|null
      */
     public static function locate(string $hash): ?HashingInterface;
-
-    /**
-     * Resets the state.
-     *
-     * @return void
-     */
-    public static function reset(): void;
 }

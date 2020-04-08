@@ -9,8 +9,8 @@ use Phalcon\Mvc\Model;
 use TimurFlush\Auth\Exception\InvalidArgumentException;
 use TimurFlush\Auth\Manager;
 use TimurFlush\Auth\Session\SessionInterface;
-use TimurFlush\Auth\Support\Phalcon\InteractsWithCreatedAt;
-use TimurFlush\Auth\Support\Phalcon\InteractsWithUpdatedAt;
+use TimurFlush\Auth\Support\Model\InteractsWithCreatedAt;
+use TimurFlush\Auth\Support\Model\InteractsWithUpdatedAt;
 use DateTimeInterface;
 
 abstract class Session extends Model implements SessionInterface
@@ -84,12 +84,6 @@ abstract class Session extends Model implements SessionInterface
      */
     public function setUserId(int $userId)
     {
-        if ($userId === 0 && Manager::options('userModel.allowZeroId')) {
-            throw new InvalidArgumentException('An identity cannot be zero.');
-        } elseif ($userId < 0 && Manager::options('allowNegativeId')) {
-            throw new InvalidArgumentException('An identity cannot be negative.');
-        }
-
         $this->user_id = $userId;
         return $this;
     }
@@ -123,26 +117,34 @@ abstract class Session extends Model implements SessionInterface
      * {@inheritdoc}
      *
      * @return $this
-     *
-     * @throws InvalidArgumentException   Please see the method `TimurFlush\Auth\Manager::options()`
-     * @throws \TimurFlush\Auth\Exception Please see the method `TimurFlush\Auth\Manager::options()`
      */
     public function setExpiresAt(DateTimeInterface $dateTime)
     {
-        $this->expires_at = $dateTime->format(Manager::options('date.format'));
+        /**
+         * @var Manager $authManager
+         */
+        $authManager = $this
+            ->getDI()
+            ->getShared('authManager');
+
+        $this->expires_at = $dateTime->format($authManager->getSqlDateFormat());
         return $this;
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @throws InvalidArgumentException   Please see the method `TimurFlush\Auth\Manager::options()`
-     * @throws \TimurFlush\Auth\Exception Please see the method `TimurFlush\Auth\Manager::options()`
      */
     public function getExpiresAt(): ?Carbon
     {
+        /**
+         * @var Manager $authManager
+         */
+        $authManager = $this
+            ->getDI()
+            ->getShared('authManager');
+
         return isset($this->expires_at)
-            ? Carbon::createFromFormat(Manager::options('date.format'), $this->expires_at)
+            ? Carbon::createFromFormat($authManager->getSqlDateFormat(), $this->expires_at)
             : null;
     }
 

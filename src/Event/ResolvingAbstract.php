@@ -2,33 +2,20 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Event\Object;
+namespace TimurFlush\Auth\Event;
 
 use TimurFlush\Auth\Accessor\StatefulAccessorInterface;
-use TimurFlush\Auth\Event\EventInterface;
 use TimurFlush\Auth\Session\SessionInterface;
 use TimurFlush\Auth\User\UserInterface;
 
 abstract class ResolvingAbstract implements EventInterface
 {
-    /**
-     * @var UserInterface
-     */
     protected UserInterface $user;
 
-    /**
-     * @var SessionInterface
-     */
     protected SessionInterface $session;
 
-    /**
-     * @var StatefulAccessorInterface
-     */
     protected StatefulAccessorInterface $statefulAccessor;
 
-    /**
-     * @var int
-     */
     protected int $resolvingType;
 
     public function __construct(
@@ -45,8 +32,6 @@ abstract class ResolvingAbstract implements EventInterface
 
     /**
      * Returns a user which associated with this event.
-     *
-     * @return UserInterface
      */
     public function getUser(): UserInterface
     {
@@ -55,8 +40,6 @@ abstract class ResolvingAbstract implements EventInterface
 
     /**
      * Returns a session which associated with this event.
-     *
-     * @return SessionInterface
      */
     public function getSession(): SessionInterface
     {
@@ -65,8 +48,6 @@ abstract class ResolvingAbstract implements EventInterface
 
     /**
      * Returns a stateful accessor which associated with this event.
-     *
-     * @return StatefulAccessorInterface|null
      */
     public function getStatefulAccessor(): ?StatefulAccessorInterface
     {
@@ -77,8 +58,6 @@ abstract class ResolvingAbstract implements EventInterface
 
     /**
      * Returns a resolving type.
-     *
-     * @return int
      */
     public function getResolvingType(): int
     {

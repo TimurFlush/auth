@@ -8,7 +8,7 @@ use Closure;
 use TimurFlush\Auth\Exception;
 use TimurFlush\Auth\Manager;
 
-class Locator implements LocatorInterface
+class HashingLocator implements HashingLocatorInterface
 {
     /**
      * @var Closure[]
@@ -28,9 +28,18 @@ class Locator implements LocatorInterface
     }
 
     /**
+     * Returns the default hashing.
+     *
+     * @return BCrypt
+     */
+    public static function getDefaultHashing(): BCrypt
+    {
+        return new BCrypt();
+    }
+
+    /**
      * {@inheritDoc}
      *
-     * @throws Exception Please see the method `TimurFlush\Auth\Manager::options()`
      * @throws Exception If some element of locator pool does not implement the HashingInterface
      */
     public static function locate(string $hash): ?HashingInterface
@@ -42,10 +51,7 @@ class Locator implements LocatorInterface
             return null;
         }
 
-        /**
-         * @var HashingInterface $defaultHashing
-         */
-        $defaultHashing = Manager::options('hashing');
+        $defaultHashing = static::getDefaultHashing();
 
         if ($defaultHashing->isMyHash($hash)) {
             return $defaultHashing;
@@ -71,13 +77,5 @@ class Locator implements LocatorInterface
         }
 
         return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public static function reset(): void
-    {
-        static::$pool = null;
     }
 }

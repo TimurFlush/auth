@@ -92,4 +92,18 @@ interface SessionInterface
      * @return Carbon|null
      */
     public function getExpiresAt(): ?Carbon;
+
+    /**
+     * Revokes a session.
+     *
+     * @return void
+     */
+    public function revoke(): void;
+
+    /**
+     * Determines whether or not the session has been revoked
+     *
+     * @return bool
+     */
+    public function isRevoked(): bool;
 }

@@ -9,7 +9,7 @@ use TimurFlush\Auth\Checker\OptionalCheckerInterface;
 use TimurFlush\Auth\Session\SessionInterface;
 use TimurFlush\Auth\User\UserInterface;
 
-interface StatelessAccessorInterface
+interface AccessorInterface
 {
     /**
      * Determines if a user is authenticated.

@@ -40,7 +40,7 @@ class StateCest
                 'type'  => 'bool',
                 'value' => false
             ],
-            'hashing.default' => [
+            'hashing' => [
                 'type'  => HashingInterface::class,
                 'value' => new BCrypt()
             ],

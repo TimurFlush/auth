@@ -2,44 +2,35 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Event\Object;
+namespace TimurFlush\Auth\Event;
 
 use TimurFlush\Auth\Checker\CheckerInterface;
-use TimurFlush\Auth\Event\EventInterface;
 use TimurFlush\Auth\Session\SessionInterface;
 use TimurFlush\Auth\User\UserInterface;
 
 class FailedChecker implements EventInterface
 {
-    /**
-     * @var CheckerInterface
-     */
+    public const ON_AUTHENTICATION = 1;
+
+    public const ON_VALIDATION = 2;
+
     protected CheckerInterface $checker;
 
-    /**
-     * @var UserInterface
-     */
     protected UserInterface $user;
 
-    /**
-     * @var SessionInterface|null
-     */
     protected ?SessionInterface $session;
 
-    /**
-     * Logout constructor.
-     *
-     * @param CheckerInterface      $checker
-     * @param UserInterface         $user
-     * @param SessionInterface|null $session
-     */
+    protected int $phase;
+
     public function __construct(
         CheckerInterface $checker,
         UserInterface $user,
+        int $phase,
         ?SessionInterface $session = null
     ) {
         $this->checker = $checker;
         $this->user = $user;
+        $this->phase = $phase;
         $this->session = $session;
     }
 
@@ -53,8 +44,6 @@ class FailedChecker implements EventInterface
 
     /**
      * Returns a checker which associated with this event.
-     *
-     * @return CheckerInterface
      */
     public function getChecker(): CheckerInterface
     {
@@ -63,8 +52,6 @@ class FailedChecker implements EventInterface
 
     /**
      * Returns a user which associated with this event.
-     *
-     * @return UserInterface
      */
     public function getUser(): UserInterface
     {
@@ -73,13 +60,27 @@ class FailedChecker implements EventInterface
 
     /**
      * Returns a session which associated with this event.
-     *
-     * @return SessionInterface|null
      */
     public function getSession(): ?SessionInterface
     {
         return isset($this->session)
             ? $this->session
             : null;
+    }
+
+    /**
+     * Determines if an error has occurred during the user authentication phase.
+     */
+    public function onAuthentication(): bool
+    {
+        return $this->phase === static::ON_AUTHENTICATION;
+    }
+
+    /**
+     * Determines whether an error has occurred during the user validation phase.
+     */
+    public function onValidation(): bool
+    {
+        return $this->phase === static::ON_VALIDATION;
     }
 }

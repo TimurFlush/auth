@@ -2,23 +2,14 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Event\Object;
-
-use TimurFlush\Auth\Event\EventInterface;
+namespace TimurFlush\Auth\Event;
 
 class BeforeRegister implements EventInterface
 {
-    /**
-     * @var array
-     */
     protected array $credentials = [];
 
-    /**
-     * AfterRegister constructor.
-     *
-     * @param array $credentials
-     */
-    public function __construct(array $credentials) {
+    public function __construct(array $credentials)
+    {
         $this->credentials = $credentials;
     }
 
@@ -32,8 +23,6 @@ class BeforeRegister implements EventInterface
 
     /**
      * Returns credentials which associated with this event.
-     *
-     * @return array
      */
     public function getCredentials(): array
     {

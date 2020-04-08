@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Support\Phalcon\Model;
+namespace TimurFlush\Auth\Support\Model;
 
 use Carbon\Carbon;
 use Phalcon\Mvc\Model\Behavior\Timestampable;
@@ -24,14 +24,21 @@ trait InteractsWithCreatedAt
      */
     protected function applyCreatedAtBehavior(): void
     {
+        /**
+         * @var Manager $authManager
+         */
+        $authManager = $this
+            ->getDI()
+            ->getShared('authManager');
+
         $this->addBehavior(
             new Timestampable(
                 [
                     'beforeValidationOnCreate' => [
                         'field' => 'created_at',
-                        'generator' => function () {
+                        'generator' => function () use ($authManager) {
                             $imm = new \DateTimeImmutable('NOW');
-                            return $imm->format(Manager::options('date.format'));
+                            return $imm->format($authManager->getSqlDateFormat());
                         }
                     ]
                 ]
@@ -51,7 +58,14 @@ trait InteractsWithCreatedAt
      */
     public function setCreatedAt(DateTimeInterface $dateTime)
     {
-        $this->created_at = $dateTime->format(Manager::options('date.format'));
+        /**
+         * @var Manager $authManager
+         */
+        $authManager = $this
+            ->getDI()
+            ->getShared('authManager');
+
+        $this->created_at = $dateTime->format($authManager->getSqlDateFormat());
         return $this;
     }
 
@@ -65,8 +79,15 @@ trait InteractsWithCreatedAt
      */
     public function getCreatedAt(): ?Carbon
     {
+        /**
+         * @var Manager $authManager
+         */
+        $authManager = $this
+            ->getDI()
+            ->getShared('authManager');
+
         return isset($this->created_at)
-            ? Carbon::createFromFormat(Manager::options('date.format'), $this->created_at)
+            ? Carbon::createFromFormat($authManager->getSqlDateFormat(), $this->created_at)
             : null;
     }
 }

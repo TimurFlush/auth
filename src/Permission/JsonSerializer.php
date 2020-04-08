@@ -6,7 +6,7 @@ namespace TimurFlush\Auth\Permission;
 
 use TimurFlush\Auth\Exception\PermissionsSerializerException;
 
-class Serializer implements SerializerInterface
+class JsonSerializer implements SerializerInterface
 {
     /**
      * {@inheritDoc}
