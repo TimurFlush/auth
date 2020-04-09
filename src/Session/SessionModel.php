@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Session\Phalcon;
+namespace TimurFlush\Auth\Session;
 
 use Carbon\Carbon;
 use Phalcon\Mvc\Model;
@@ -13,7 +13,7 @@ use TimurFlush\Auth\Support\Model\InteractsWithCreatedAt;
 use TimurFlush\Auth\Support\Model\InteractsWithUpdatedAt;
 use DateTimeInterface;
 
-abstract class Session extends Model implements SessionInterface
+abstract class SessionModel extends Model implements SessionInterface
 {
     use InteractsWithCreatedAt;
     use InteractsWithUpdatedAt;
