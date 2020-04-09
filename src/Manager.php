@@ -144,7 +144,7 @@ class Manager implements ManagerInterface
      */
     public function register(array $credentials, $activate = false): bool
     {
-        if (($activate instanceof Closure) === false || !is_bool($activate)) {
+        if (($activate instanceof Closure) === false && !is_bool($activate)) {
             throw new Exception("The 'activate' argument must be a Closure object or boolean.");
         }
 
