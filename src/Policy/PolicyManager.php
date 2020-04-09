@@ -143,7 +143,7 @@ class PolicyManager implements PolicyManagerInterface
     }
 
     /**
-     * Resolves a user from the user resolver.
+     * Resolves an executor from the user resolver.
      *
      * @return UserInterface|RoleInterface|null
      *
@@ -161,7 +161,7 @@ class PolicyManager implements PolicyManagerInterface
         ) {
             throw new Exception(
                 sprintf(
-                    "The user resolver must return null, %s or %s, %s given",
+                    "The executor resolver must return null, %s or %s, %s given",
                     UserInterface::class,
                     RoleInterface::class,
                     is_object($executor) ? get_class($executor) : gettype($executor)
