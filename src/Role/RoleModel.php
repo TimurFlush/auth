@@ -57,47 +57,28 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
             ->getDI()
             ->getShared('authManager')
             ->getPermissionsSerializer();
+    }
 
-        /**
-         * Set up an unserialize event.
-         */
-        $this
-            ->getEventsManager()
-            ->attach('model:afterFetch', function ($event, ModelInterface $model) {
-                if (
-                    spl_object_id($model) !== spl_object_id($this) ||
-                    empty($this->permissions)
-                ) {
-                    return;
-                }
+    public function afterFetch()
+    {
+        if (empty($this->permissions)) {
+            return;
+        }
 
-                $this->permissions = json_decode(
-                    $this->permissions,
-                    true,
-                    2,
-                    JSON_THROW_ON_ERROR
-                );
-            });
+        $this->permissions = $this
+            ->permissionsSerializer
+            ->unserialize($this->permissions);
+    }
 
-        /**
-         * Set up an serialize event.
-         */
-        $this
-            ->getEventsManager()
-            ->attach('model:beforeValidation', function ($event, ModelInterface $model) {
-                if (
-                    spl_object_id($model) !== spl_object_id($this) ||
-                    empty($this->permissions)
-                ) {
-                    return;
-                }
+    public function beforeValidation()
+    {
+        if (empty($this->permissions)) {
+            return;
+        }
 
-                $this->permissions = json_encode(
-                    $this->permissions,
-                    JSON_THROW_ON_ERROR,
-                    2
-                );
-            });
+        $this->permissions = $this
+            ->permissionsSerializer
+            ->serialize($this->permissions);
     }
 
     /**
