@@ -223,7 +223,7 @@ class Manager implements ManagerInterface
      */
     public function createActivation(UserInterface $user): ActivationInterface
     {
-        $activation = $this->activationRepository->create($user);
+        $activation = $this->activationRepository->createNewActivation($user);
 
         $this->activationRepository->save($activation);
 
