@@ -140,16 +140,17 @@ class Manager implements ManagerInterface
     /**
      * {@inheritDoc}
      *
-     * @throws Exception If the 'activate' argument is not a Closure object or boolean.
+     * @throws \TimurFlush\Auth\Exception If the 'activate' argument is not a Closure object or boolean.
+     * @throws \TimurFlush\Auth\Exception If unable to register a user
      */
-    public function register(array $credentials, $activate = false): bool
+    public function register(array $credentials, $activate = false): UserInterface
     {
         if (($activate instanceof Closure) === false && !is_bool($activate)) {
             throw new Exception("The 'activate' argument must be a Closure object or boolean.");
         }
 
         if ($this->fireEvent(new BeforeRegister($credentials)) === false) {
-            return false;
+            throw new Exception("Unable to register a user, because the 'beforeRegister' event returned a false");
         }
 
         if ($activate instanceof Closure) {
@@ -162,7 +163,7 @@ class Manager implements ManagerInterface
 
         $this->fireEvent(new AfterRegister($user));
 
-        return true;
+        return $user;
     }
 
     /**
