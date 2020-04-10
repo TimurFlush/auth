@@ -173,14 +173,15 @@ class Manager implements ManagerInterface
     {
         $activation = $this->activationRepository->find($activationId, $userId);
 
-        if ($activation instanceof ActivationInterface) {
+        if ($activation !== null) {
             $user = $this->userRepository->findById($userId);
 
-            if ($user instanceof UserInterface) {
-                return $this->activateByUser($user);
+            if ($user !== null) {
+                if ($this->activateByUser($user)) {
+                    $this->activationRepository->delete($activation);
+                    return true;
+                }
             }
-
-            $this->activationRepository->delete($activation);
         }
 
         return false;
