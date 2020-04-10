@@ -15,9 +15,9 @@ interface ManagerInterface
      * @param array         $credentials
      * @param \Closure|bool $activate
      *
-     * @return bool
+     * @return UserInterface
      */
-    public function register(array $credentials, $activate = false): bool;
+    public function register(array $credentials, $activate = false): UserInterface;
 
     /**
      * @param int    $userId
