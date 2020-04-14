@@ -110,9 +110,7 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
         }
 
         if (!empty($this->permissions)) {
-            $this->permissions = $this->serializer->serialize(
-                array_values($this->permissions)
-            );
+            $this->permissions = $this->serializer->serialize($this->permissions);
         } else {
             $this->permissions = null;
         }
