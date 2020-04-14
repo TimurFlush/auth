@@ -85,18 +85,18 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
      *
      * @return $this
      */
-    public function setPermissionsSerializer(SerializerInterface $serializer)
+    public function setSerializer(SerializerInterface $serializer)
     {
-        $this->permissionsSerializer = $serializer;
+        $this->serializer = $serializer;
         return $this;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getPermissionsSerializer(): SerializerInterface
+    public function getSerializer(): SerializerInterface
     {
-        return $this->permissionsSerializer;
+        return $this->serializer;
     }
 
     /**
