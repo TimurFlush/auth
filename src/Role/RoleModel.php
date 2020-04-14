@@ -49,7 +49,10 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
     {
         $this->setSource('roles');
         $this->useDynamicUpdate(true);
+    }
 
+    public function onConstruct()
+    {
         /**
          * Set up the permissions serializer.
          */
