@@ -111,9 +111,9 @@ class PolicyManager implements PolicyManagerInterface
      */
     protected function resolveComplexPolicy($owner): object
     {
-        $owner = is_object($owner) ? get_class($owner) : gettype($owner);
-
         if (!is_string($owner) && !is_object($owner)) {
+            $owner = is_object($owner) ? get_class($owner) : gettype($owner);
+
             throw new InvalidArgumentException(
                 sprintf(
                     'The owner of a resolvable policy must be a string or an object, %s given',
