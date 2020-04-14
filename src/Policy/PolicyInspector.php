@@ -55,7 +55,7 @@ final class PolicyInspector
 
         if ($argumentType instanceof ReflectionNamedType === false) {
             throw new InvalidArgumentException(
-                "A first argument of the policy '" . $policyAction . "' be the typed property"
+                "A first argument of the policy '" . $policyAction . "' must be the typed property"
             );
         }
 
