@@ -38,4 +38,9 @@ interface InteractsWithPermissions
      * @return bool
      */
     public function isPermitted(string $permission, callable $callback = null, ...$callbackArguments): bool;
+
+    /**
+     * Removes all permissions.
+     */
+    public function flushPermissions();
 }

@@ -217,4 +217,15 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
 
         return call_user_func($callback, ...$callbackArguments);
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return $this
+     */
+    public function flushPermissions()
+    {
+        $this->permissions = null;
+        return $this;
+    }
 }
