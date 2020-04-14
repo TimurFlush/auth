@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Permission;
+namespace TimurFlush\Auth\Serializer;
 
 use TimurFlush\Auth\Exception\PermissionsSerializerException;
 
@@ -16,7 +16,7 @@ class JsonSerializer implements SerializerInterface
     public function serialize(array $permissions): string
     {
         try {
-            return json_encode($permissions, JSON_THROW_ON_ERROR, 2);
+            return json_encode($permissions, JSON_THROW_ON_ERROR);
         } catch (\JsonException $exception) {
             throw new PermissionsSerializerException($exception->getMessage());
         }
@@ -30,7 +30,7 @@ class JsonSerializer implements SerializerInterface
     public function unserialize(string $serialized): array
     {
         try {
-            return json_decode($serialized, true, 2, JSON_THROW_ON_ERROR);
+            return json_decode($serialized, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $exception) {
             throw new PermissionsSerializerException($exception->getMessage());
         }

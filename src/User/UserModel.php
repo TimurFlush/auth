@@ -10,8 +10,8 @@ use TimurFlush\Auth\Exception;
 use TimurFlush\Auth\Exception\InvalidArgumentException;
 use TimurFlush\Auth\Hashing\HashingLocator;
 use TimurFlush\Auth\Manager;
-use TimurFlush\Auth\Permission\SerializerAwareInterface;
-use TimurFlush\Auth\Permission\SerializerInterface;
+use TimurFlush\Auth\Serializer\SerializerAwareInterface;
+use TimurFlush\Auth\Serializer\SerializerInterface;
 use TimurFlush\Auth\Policy\PolicyExecutorTrait;
 use TimurFlush\Auth\Role\RoleInterface;
 use TimurFlush\Auth\Exception\UnsafeException;
@@ -60,9 +60,9 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
     protected $permissions;
 
     /**
-     * @var \TimurFlush\Auth\Permission\SerializerInterface
+     * @var \TimurFlush\Auth\Serializer\SerializerInterface
      */
-    protected SerializerInterface $permissionsSerializer;
+    protected SerializerInterface $serializer;
 
     /**
      * Initialize method.
@@ -78,34 +78,40 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
         /**
          * Set up the permissions serializer.
          */
-        $this->permissionsSerializer = $this
+        $this->serializer = $this
             ->getDI()
             ->getShared('authManager')
-            ->getPermissionsSerializer();
+            ->getSerializer();
     }
 
     public function afterFetch()
     {
-        if (empty($this->permissions)) {
-            $this->permissions = null;
-            return;
+        if (!empty($this->roles)) {
+            $this->roles = $this->serializer->unserialize($this->roles);
+        } else {
+            $this->roles = null;
         }
 
-        $this->permissions = $this
-            ->permissionsSerializer
-            ->unserialize($this->permissions);
+        if (!empty($this->permissions)) {
+            $this->permissions = $this->serializer->unserialize($this->permissions);
+        } else {
+            $this->permissions = null;
+        }
     }
 
     public function beforeValidation()
     {
-        if (empty($this->permissions)) {
-            $this->permissions = null;
-            return;
+        if (!empty($this->roles)) {
+            $this->roles = $this->serializer->serialize($this->roles);
+        } else {
+            $this->roles = null;
         }
 
-        $this->permissions = $this
-            ->permissionsSerializer
-            ->serialize($this->permissions);
+        if (!empty($this->permissions)) {
+            $this->permissions = $this->serializer->serialize($this->permissions);
+        } else {
+            $this->permissions = null;
+        }
     }
 
     /**
@@ -113,18 +119,18 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
      *
      * @return $this
      */
-    public function setPermissionsSerializer(SerializerInterface $serializer)
+    public function setSerializer(SerializerInterface $serializer)
     {
-        $this->permissionsSerializer = $serializer;
+        $this->serializer = $serializer;
         return $this;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getPermissionsSerializer(): SerializerInterface
+    public function getSerializer(): SerializerInterface
     {
-        return $this->permissionsSerializer;
+        return $this->serializer;
     }
 
     /**
