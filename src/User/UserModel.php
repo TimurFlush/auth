@@ -102,13 +102,17 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
     public function beforeValidation()
     {
         if (!empty($this->roles)) {
-            $this->roles = $this->serializer->serialize($this->roles);
+            $this->roles = $this->serializer->serialize(
+                array_values($this->roles)
+            );
         } else {
             $this->roles = null;
         }
 
         if (!empty($this->permissions)) {
-            $this->permissions = $this->serializer->serialize($this->permissions);
+            $this->permissions = $this->serializer->serialize(
+                array_values($this->permissions)
+            );
         } else {
             $this->permissions = null;
         }
