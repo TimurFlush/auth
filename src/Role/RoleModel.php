@@ -74,7 +74,9 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
     public function beforeValidation()
     {
         if (!empty($this->permissions)) {
-            $this->permissions = $this->serializer->serialize($this->permissions);
+            $this->permissions = $this->serializer->serialize(
+                array_values($this->permissions)
+            );
         } else {
             $this->permissions = null;
         }
