@@ -72,6 +72,13 @@ interface UserInterface extends InteractsWithPermissions
     public function addPermission(string $permission, bool $value);
 
     /**
+     * Checks a role existing
+     *
+     * @param $role
+     */
+    public function hasRole($role);
+
+    /**
      * Rewrite a permission.
      *
      * @param string $permission        A permission name for rewriting.

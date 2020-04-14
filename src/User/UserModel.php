@@ -575,6 +575,26 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
         return $this;
     }
 
+    public function hasRole($role)
+    {
+        $roleName = null;
+
+        if ($role instanceof RoleInterface) {
+            $roleName = $role->getName();
+        } elseif (is_string($role)) {
+            $roleName = $role;
+        } else {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'A role must be the RoleInterface or a string, %s given',
+                    is_object($role) ? get_class($role) : gettype($role)
+                )
+            );
+        }
+
+        return is_array($this->roles) && in_array($roleName, $this->roles);
+    }
+
     public function setApiToken(string $token)
     {
         if (mb_strlen($token) < 32) {
