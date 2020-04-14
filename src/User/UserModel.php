@@ -71,7 +71,10 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
     {
         $this->setSource('users');
         $this->useDynamicUpdate(true);
+    }
 
+    public function onConstruct()
+    {
         /**
          * Set up the permissions serializer.
          */
