@@ -126,8 +126,6 @@ class PolicyManager implements PolicyManagerInterface
             );
         }
 
-        $owner = is_object($owner) ? get_class($owner) : gettype($owner);
-
         if (isset($this->policies[$owner])) {
             return $this->policies[$owner];
         }
