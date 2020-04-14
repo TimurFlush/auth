@@ -65,6 +65,7 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
     public function afterFetch()
     {
         if (empty($this->permissions)) {
+            $this->permissions = null;
             return;
         }
 
@@ -76,6 +77,7 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
     public function beforeValidation()
     {
         if (empty($this->permissions)) {
+            $this->permissions = null;
             return;
         }
 

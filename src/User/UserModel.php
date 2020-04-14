@@ -87,6 +87,7 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
     public function afterFetch()
     {
         if (empty($this->permissions)) {
+            $this->permissions = null;
             return;
         }
 
@@ -98,6 +99,7 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
     public function beforeValidation()
     {
         if (empty($this->permissions)) {
+            $this->permissions = null;
             return;
         }
 
