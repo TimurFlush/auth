@@ -363,7 +363,7 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
             );
         }
 
-        if (!in_array($roleName, $this->roles)) {
+        if (!is_array($this->roles) || !in_array($roleName, $this->roles)) {
             if ($needSearch) {
                 /**
                  * @var Manager $authManager
