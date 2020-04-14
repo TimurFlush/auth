@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Permission;
+namespace TimurFlush\Auth\Serializer;
 
 interface SerializerAwareInterface
 {
@@ -11,12 +11,12 @@ interface SerializerAwareInterface
      *
      * @param SerializerInterface $serializer
      */
-    public function setPermissionsSerializer(SerializerInterface $serializer);
+    public function setSerializer(SerializerInterface $serializer);
 
     /**
      * Returns the permissions serializer instance.
      *
      * @return SerializerInterface
      */
-    public function getPermissionsSerializer(): SerializerInterface;
+    public function getSerializer(): SerializerInterface;
 }

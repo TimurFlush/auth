@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TimurFlush\Auth\Permission;
+namespace TimurFlush\Auth\Serializer;
 
 interface SerializerInterface
 {
     /**
-     * Serializes permissions.
+     * Serializes data.
      *
      * @param array $permissions Associative array.
      *
@@ -16,7 +16,7 @@ interface SerializerInterface
     public function serialize(array $permissions): string;
 
     /**
-     * Unserializes permissions.
+     * Unserializes data.
      *
      * @param string $serialized
      *

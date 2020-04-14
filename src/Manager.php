@@ -10,9 +10,7 @@ use TimurFlush\Auth\Event\Fireable;
 use TimurFlush\Auth\Event\AfterRegister;
 use TimurFlush\Auth\Event\BeforeRegister;
 use TimurFlush\Auth\Event\NeedActivation;
-use TimurFlush\Auth\Permission\SerializerInterface;
-use TimurFlush\Auth\Policy\PolicyManager;
-use TimurFlush\Auth\Role\RoleInterface;
+use TimurFlush\Auth\Serializer\SerializerInterface;
 use TimurFlush\Auth\Role\RepositoryInterface as RoleRepository;
 use TimurFlush\Auth\User\RepositoryInterface as UserRepository;
 use TimurFlush\Auth\User\UserInterface;
@@ -46,9 +44,9 @@ class Manager implements ManagerInterface
     protected RoleRepository $roleRepository;
 
     /**
-     * @var  \TimurFlush\Auth\Permission\SerializerInterface
+     * @var  \TimurFlush\Auth\Serializer\SerializerInterface
      */
-    protected SerializerInterface $permissionsSerializer;
+    protected SerializerInterface $serializer;
 
     /**
      * Manager constructor.
@@ -69,7 +67,7 @@ class Manager implements ManagerInterface
         $this->userRepository = $userRepository;
         $this->activationRepository = $activationRepository;
         $this->roleRepository = $roleRepository;
-        $this->permissionsSerializer = $permissionsSerializer;
+        $this->serializer = $permissionsSerializer;
 
         if ($eventsManager !== null) {
             $this->setEventsManager($eventsManager);
@@ -107,13 +105,13 @@ class Manager implements ManagerInterface
     }
 
     /**
-     * Returns a permissions serializer instance.
+     * Returns a serializer instance.
      *
      * @return SerializerInterface
      */
-    public function getPermissionsSerializer(): SerializerInterface
+    public function getSerializer(): SerializerInterface
     {
-        return $this->permissionsSerializer;
+        return $this->serializer;
     }
 
     /**

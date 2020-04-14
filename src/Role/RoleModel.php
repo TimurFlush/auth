@@ -6,8 +6,8 @@ namespace TimurFlush\Auth\Role;
 
 use Phalcon\Mvc\Model;
 use Phalcon\Mvc\ModelInterface;
-use TimurFlush\Auth\Permission\SerializerAwareInterface;
-use TimurFlush\Auth\Permission\SerializerInterface;
+use TimurFlush\Auth\Serializer\SerializerAwareInterface;
+use TimurFlush\Auth\Serializer\SerializerInterface;
 
 /**
  * @property int    $id
@@ -41,9 +41,9 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
     protected $permissions;
 
     /**
-     * @var \TimurFlush\Auth\Permission\SerializerInterface
+     * @var \TimurFlush\Auth\Serializer\SerializerInterface
      */
-    protected SerializerInterface $permissionsSerializer;
+    protected SerializerInterface $serializer;
 
     public function initialize()
     {
@@ -56,34 +56,28 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
         /**
          * Set up the permissions serializer.
          */
-        $this->permissionsSerializer = $this
+        $this->serializer = $this
             ->getDI()
             ->getShared('authManager')
-            ->getPermissionsSerializer();
+            ->getSerializer();
     }
 
     public function afterFetch()
     {
-        if (empty($this->permissions)) {
+        if (!empty($this->permissions)) {
+            $this->permissions = $this->serializer->unserialize($this->permissions);
+        } else {
             $this->permissions = null;
-            return;
         }
-
-        $this->permissions = $this
-            ->permissionsSerializer
-            ->unserialize($this->permissions);
     }
 
     public function beforeValidation()
     {
-        if (empty($this->permissions)) {
+        if (!empty($this->permissions)) {
+            $this->permissions = $this->serializer->serialize($this->permissions);
+        } else {
             $this->permissions = null;
-            return;
         }
-
-        $this->permissions = $this
-            ->permissionsSerializer
-            ->serialize($this->permissions);
     }
 
     /**
