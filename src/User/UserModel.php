@@ -554,6 +554,17 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return $this
+     */
+    public function flushPermissions()
+    {
+        $this->permissions = null;
+        return $this;
+    }
+
     public function setApiToken(string $token)
     {
         if (mb_strlen($token) < 32) {
