@@ -91,10 +91,6 @@ class PolicyManager implements PolicyManagerInterface
             throw new InvalidArgumentException(
                 "The policy class '" . $policyClass . "' does not exist."
             );
-        } elseif (!is_a($policyClass, PolicyInterface::class, true)) {
-            throw new InvalidArgumentException(
-                "The policy class '" . $policyClass . "' does not implement the " . PolicyInterface::class
-            );
         }
 
         $this->assignMap[$owner] = $policyClass;
@@ -105,7 +101,7 @@ class PolicyManager implements PolicyManagerInterface
      *
      * @param string|object $owner
      *
-     * @return PolicyInterface
+     * @return object
      *
      * @throws \TimurFlush\Auth\Exception\InvalidArgumentException If the owner of a resolvable policy
      *                                                             is not a string or an object.
@@ -113,7 +109,7 @@ class PolicyManager implements PolicyManagerInterface
      * @throws \TimurFlush\Auth\Exception\InvalidArgumentException If a complex policy which assigned to
      *                                                             a specified owner does not exist.
      */
-    protected function resolveComplexPolicy($owner): PolicyInterface
+    protected function resolveComplexPolicy($owner): object
     {
         $owner = is_object($owner) ? get_class($owner) : gettype($owner);
 
