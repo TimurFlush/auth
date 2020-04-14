@@ -313,11 +313,11 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
     }
 
     /**
-     * Clears inherited roles.
+     * Removes inherited roles.
      *
      * @return $this
      */
-    public function clearRoles()
+    public function flushRoles()
     {
         $this->roles = null;
         return $this;
