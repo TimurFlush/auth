@@ -167,7 +167,9 @@ class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
     {
         if (!is_array($this->permissions)) {
             $this->permissions = [];
-        } elseif (!in_array($permission, $this->permissions)) {
+        }
+
+        if (!in_array($permission, $this->permissions)) {
             $this->permissions[] = $permission;
         }
 
