@@ -16,7 +16,7 @@ class HashCest
         $hash = $bcrypt->hash(random_bytes(32));
 
         $I->assertIsString($hash);
-        $I->assertStringStartsWith('$2y$', $hash);
+        $I->assertStringStartsWith('TFBCrypt', $hash);
 
         $length = strlen($hash);
 

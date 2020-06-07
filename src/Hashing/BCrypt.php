@@ -12,6 +12,11 @@ class BCrypt implements HashingInterface
     protected int $cost;
 
     /**
+     * @var string
+     */
+    protected string $staffPrefix = 'TFBCrypt';
+
+    /**
      * BCrypt constructor.
      *
      * @param int $cost
@@ -26,7 +31,7 @@ class BCrypt implements HashingInterface
      */
     public function hash(string $original): string
     {
-        return 'bcrypt' . password_hash($original, PASSWORD_BCRYPT, [
+        return $this->staffPrefix . password_hash($original, PASSWORD_BCRYPT, [
             'cost' => $this->cost
         ]);
     }
@@ -36,7 +41,14 @@ class BCrypt implements HashingInterface
      */
     public function check(string $original, string $hashed): bool
     {
-        return password_verify($original, $hashed);
+        return password_verify(
+            $original,
+            str_replace(
+                $this->staffPrefix,
+                '',
+                $hashed
+            )
+        );
     }
 
     /**
@@ -44,6 +56,6 @@ class BCrypt implements HashingInterface
      */
     public function isMyHash(string $hash): bool
     {
-        return strpos($hash, '$2y$') === 0;
+        return strpos($hash, $this->staffPrefix) === 0;
     }
 }
