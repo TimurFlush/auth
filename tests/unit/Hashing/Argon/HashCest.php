@@ -22,7 +22,7 @@ class HashCest
         $hash = $argon->hash(random_bytes(32));
 
         $I->assertIsString($hash);
-        $I->assertStringStartsWith('$2y$', $hash);
+        $I->assertStringStartsWith('$argon2', $hash);
         $I->assertEquals(60, strlen($hash));
     }
 }
