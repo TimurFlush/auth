@@ -33,6 +33,11 @@ class Argon implements HashingInterface
     protected int $threads;
 
     /**
+     * @var string
+     */
+    protected string $staffPrefix = 'TFArgon';
+
+    /**
      * Argon constructor.
      *
      * @param string $type       Argon type.
@@ -95,7 +100,7 @@ class Argon implements HashingInterface
                 break;
         }
 
-        return password_hash($original, $type, [
+        return $this->staffPrefix . password_hash($original, $type, [
             'memory_cost' => $this->memoryCost,
             'time_cost' => $this->timeCost,
             'threads' => $this->threads
@@ -107,7 +112,14 @@ class Argon implements HashingInterface
      */
     public function check(string $original, string $hashed): bool
     {
-        return password_verify($original, $hashed);
+        return password_verify(
+            $original,
+            str_replace(
+                $this->staffPrefix,
+                '',
+                $hashed
+            )
+        );
     }
 
     /**
@@ -115,6 +127,6 @@ class Argon implements HashingInterface
      */
     public function isMyHash(string $hash): bool
     {
-        return strpos($hash, '$argon') === 0;
+        return strpos($hash, $this->staffPrefix) === 0;
     }
 }
