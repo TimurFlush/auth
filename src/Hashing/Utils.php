@@ -20,9 +20,11 @@ class Utils
      */
     public static function randomString(int $length): string
     {
+        //@codeCoverageIgnoreStart
         if ($length <= 0) {
             throw new InvalidArgumentException('A length must be positive.');
         }
+        //@codeCoverageIgnoreEnd
 
         $supportLength = null;
 

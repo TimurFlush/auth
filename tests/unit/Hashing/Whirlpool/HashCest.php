@@ -16,7 +16,7 @@ class HashCest
         $hash = $whirlpool->hash(random_bytes(32));
 
         $I->assertIsString($hash);
-        $I->assertStringStartsWith('whirlpool.', $hash);
+        $I->assertStringStartsWith('TFWhirlpool', $hash);
 
         $length = strlen($hash);
 

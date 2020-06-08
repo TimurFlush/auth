@@ -6,6 +6,6 @@ namespace TimurFlush\Auth\Exception;
 
 use TimurFlush\Auth\Exception;
 
-class InvalidArgumentException extends Exception
+class InvalidArgumentException extends \InvalidArgumentException
 {
 }

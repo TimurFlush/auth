@@ -15,7 +15,11 @@
     "ext-json": "*"
   },
   "require-dev": {
-    "squizlabs/php_codesniffer": "^3.5"
+    "squizlabs/php_codesniffer": "^3.5",
+    "codeception/codeception": "^4",
+    "codeception/module-asserts": "^1.2",
+    "phalcon/ide-stubs": "^4",
+    "mockery/mockery": "^1"
   },
   "autoload": {
     "psr-4": {

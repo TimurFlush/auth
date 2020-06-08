@@ -15,6 +15,11 @@ class Whirlpool implements HashingInterface
     protected int $saltLength = 32;
 
     /**
+     * @var string
+     */
+    protected string $staffPrefix = 'TFWhirlpool';
+
+    /**
      * Whirlpool constructor.
      *
      * @throws Exception If your php build does not support the whirlpool algorithm.
@@ -36,7 +41,7 @@ class Whirlpool implements HashingInterface
      */
     public function hash(string $original): string
     {
-        return $this->createHash($original);
+        return $this->staffPrefix . $this->createHash($original);
     }
 
     /**
@@ -47,7 +52,13 @@ class Whirlpool implements HashingInterface
      */
     public function check(string $original, string $hashed): bool
     {
-        $salt = substr($hashed, 10, $this->saltLength);
+        $hashed = str_replace(
+            $this->staffPrefix,
+            '',
+            $hashed
+        );
+
+        $salt = substr($hashed, 0, $this->saltLength);
 
         return Utils::safelyCompare(
             $this->createHash($original, $salt),
@@ -71,8 +82,7 @@ class Whirlpool implements HashingInterface
         }
 
         return sprintf(
-            '%s.%s.%s',
-            'whirlpool',
+            '%s.%s',
             $salt,
             hash('whirlpool', $salt . $original)
         );
@@ -83,6 +93,6 @@ class Whirlpool implements HashingInterface
      */
     public function isMyHash(string $hash): bool
     {
-        return strpos($hash, 'whirlpool.') === 0;
+        return strpos($hash, $this->staffPrefix) === 0;
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TimurFlush\Auth\User;
 
 use Phalcon\Mvc\Model;
-use Phalcon\Mvc\ModelInterface;
 use TimurFlush\Auth\Exception;
 use TimurFlush\Auth\Exception\InvalidArgumentException;
 use TimurFlush\Auth\Hashing\HashingLocator;
@@ -97,6 +96,14 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
         } else {
             $this->permissions = null;
         }
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function afterSave()
+    {
+        $this->afterFetch();
     }
 
     public function beforeValidation()
@@ -202,6 +209,8 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
             $needCheckPassword = true;
 
             $enteredPassword = $credentials['password'];
+            unset($credentials['password']);
+
             $persistedPassword = $this->password ?? null;
         } else {
             /**
@@ -234,9 +243,11 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
              * If hashing is not found
              */
             if ($hashing === null) {
+                //@codeCoverageIgnoreStart
                 throw new Exception(
                     'The password of the user #' . (int)$this->id . ' does not match any hashing'
                 );
+                //@codeCoverageIgnoreEnd
             }
 
             /**
@@ -251,9 +262,11 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
          * Compare user credentials
          */
         foreach ($credentials as $credentialName => $credentialValue) {
+            //@codeCoverageIgnoreStart
             if (!property_exists($this, $credentialName)) {
                 throw new Exception('The property `' . $credentialName . '` does not exist in ' . static::class);
             }
+            //@codeCoverageIgnoreEnd
 
             if ($this->{$credentialName} !== $credentialValue) {
                 return false;
@@ -305,7 +318,7 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
      * @throws \TimurFlush\Auth\Exception                          Please see the method `static::addInheritedRole()`
      * @throws \TimurFlush\Auth\Exception\InvalidArgumentException Please see the method `static::addInheritedRole()`
      */
-    public function setRoles(array $roles)
+    public function addRoles(array $roles)
     {
         foreach ($roles as $role) {
             $this->addRole($role);
@@ -522,11 +535,11 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
             ->getShared('authManager')
             ->getRoleRepository();
 
-
         $effect = null;
 
         foreach ($this->getRoles() as $roleName) {
             if (!is_string($roleName)) {
+                //@codeCoverageIgnoreStart
                 throw new Exception(
                     sprintf(
                         'A name of the role must be a string, %s given. User #%s',
@@ -534,6 +547,7 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
                         $this->id
                     )
                 );
+                //@codeCoverageIgnoreEnd
             }
 
             $role = $roleRepository->findByName($roleName);
@@ -596,7 +610,7 @@ class UserModel extends Model implements UserInterface, SerializerAwareInterface
     public function setApiToken(string $token)
     {
         if (mb_strlen($token) < 32) {
-            throw new UnsafeException('The API Token must be longer than 32 characters');
+            throw new UnsafeException('The API Token must be longer than 32 characters or equal');
         }
 
         $this->api_token = $token;

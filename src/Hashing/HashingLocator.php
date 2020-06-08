@@ -20,7 +20,7 @@ class HashingLocator implements HashingLocatorInterface
      */
     public static function register(Closure $closure): void
     {
-        if (!is_array(static::$pool)) {
+        if (!isset(static::$pool)) {
             static::$pool = [];
         }
 
@@ -47,9 +47,11 @@ class HashingLocator implements HashingLocatorInterface
         /**
          * Avoid the overhead
          */
+        //@codeCoverageIgnoreStart
         if (empty($hash)) {
             return null;
         }
+        //@codeCoverageIgnoreEnd
 
         $defaultHashing = static::getDefaultHashing();
 
