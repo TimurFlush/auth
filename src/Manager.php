@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TimurFlush\Auth;
 
+use Phalcon\Events\EventsAwareInterface;
 use TimurFlush\Auth\Activation\ActivationInterface;
 use TimurFlush\Auth\Activation\RepositoryInterface as ActivationRepository;
 use TimurFlush\Auth\Event\Fireable;

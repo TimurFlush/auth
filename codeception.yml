@@ -1,5 +1,12 @@
 actor_suffix: Tester
 
+coverage:
+    enabled: true
+    show_uncovered: true
+    show_only_summary: false
+    include:
+        - src/*
+
 paths:
     tests: tests
     output: tests/_output

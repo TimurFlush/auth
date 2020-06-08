@@ -58,13 +58,13 @@ class Argon implements HashingInterface
         if (!defined('PASSWORD_ARGON2I') || !defined('PASSWORD_ARGON2ID')) {
             throw new Exception('Your php build does not support the argon algorithm.');
         }
-        // @codeCoverageIgnoreEnd
 
         if (!in_array($type, $types = [static::TYPE_2D, static::TYPE_2I])) {
             throw new InvalidArgumentException(
                 'Passed an invalid Argon type. Available types: ' . join(', ', $types)
             );
         }
+        // @codeCoverageIgnoreEnd
 
         if ($memoryCost === null) {
             $memoryCost = PASSWORD_ARGON2_DEFAULT_MEMORY_COST;

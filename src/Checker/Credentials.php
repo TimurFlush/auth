@@ -36,6 +36,6 @@ class Credentials implements CheckerInterface
      */
     public function onAuthentication(UserInterface $user): bool
     {
-        return $user->checkCredentials($this->checkableCredentials);
+        return $user->checkCredentials($this->checkableCredentials, false);
     }
 }

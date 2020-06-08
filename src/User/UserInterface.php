@@ -54,7 +54,7 @@ interface UserInterface extends InteractsWithPermissions
      *
      * @param array|RoleInterface[] $roles
      */
-    public function setRoles(array $roles);
+    public function addRoles(array $roles);
 
     /**
      * Returns roles.

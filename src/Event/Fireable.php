@@ -15,7 +15,7 @@ trait Fireable
      *
      * @return void
      */
-    public function setEventsManager(EventsManager $manager)
+    public function setEventsManager(EventsManager $manager): void
     {
         $this->eventsManager = $manager;
     }
