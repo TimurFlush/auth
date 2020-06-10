@@ -2,10 +2,9 @@
 
 namespace TimurFlush\Auth\Tests\Unit\Checker\Credentials;
 
-use TimurFlush\Auth\Checker\Activation;
 use TimurFlush\Auth\Checker\Credentials;
-use TimurFlush\Auth\User\UserInterface;
-use TimurFlush\Auth\User\UserModel;
+use TimurFlush\Auth\Exception\UnsafeException;
+use TimurFlush\Auth\Tests\Support\Auth\User\UserModel;
 use UnitTester;
 use Mockery as m;
 
@@ -39,5 +38,13 @@ class OnAuthenticationCest
          */
         $checker = new Credentials(['id' => 'invalid-id', 'password' => $password]);
         $I->assertFalse($checker->onAuthentication($user));
+
+        /*
+         * Case 4: Without password
+         */
+        $I->expectThrowable(new UnsafeException('The credentials checking without a password is not allowed.'), function () use ($I, $id, $user) {
+            $checker = new Credentials(['id' => $id]);
+            $I->assertFalse($checker->onAuthentication($user));
+        });
     }
 }

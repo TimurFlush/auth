@@ -4,7 +4,7 @@ namespace TimurFlush\Auth\Tests\Unit\User\UserModel;
 
 use TimurFlush\Auth\Role\RoleInterface;
 use TimurFlush\Auth\Serializer\SerializerInterface;
-use TimurFlush\Auth\User\UserModel;
+use TimurFlush\Auth\Tests\Support\Auth\User\UserModel;
 use UnitTester;
 use Mockery as m;
 

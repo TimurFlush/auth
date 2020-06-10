@@ -2,12 +2,10 @@
 
 namespace TimurFlush\Auth\Tests\Unit\User\UserModel;
 
-use TimurFlush\Auth\Exception\InvalidArgumentException;
-use TimurFlush\Auth\Exception;
 use TimurFlush\Auth\Role\RoleInterface;
 use TimurFlush\Auth\Role\RepositoryInterface as RoleRepositoryInterface;
-use TimurFlush\Auth\Role\RoleModel;
-use TimurFlush\Auth\User\UserModel;
+use TimurFlush\Auth\Tests\Support\Auth\Role\RoleModel;
+use TimurFlush\Auth\Tests\Support\Auth\User\UserModel;
 use UnitTester;
 use Mockery as m;
 

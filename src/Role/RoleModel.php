@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TimurFlush\Auth\Role;
 
 use Phalcon\Mvc\Model;
-use Phalcon\Mvc\ModelInterface;
 use TimurFlush\Auth\Serializer\SerializerAwareInterface;
 use TimurFlush\Auth\Serializer\SerializerInterface;
 
@@ -15,7 +14,7 @@ use TimurFlush\Auth\Serializer\SerializerInterface;
  * @property string $description
  * @property array  $permissions
  */
-class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
+abstract class RoleModel extends Model implements RoleInterface, SerializerAwareInterface
 {
     /**
      * @Column(type='integer', nullable=false)
