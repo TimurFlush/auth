@@ -2,7 +2,7 @@
 
 namespace TimurFlush\Auth\Tests\Unit\User\UserModel;
 
-use TimurFlush\Auth\User\UserModel;
+use TimurFlush\Auth\Tests\Support\Auth\User\UserModel;
 use UnitTester;
 
 class BanStatusCest

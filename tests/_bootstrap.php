@@ -11,6 +11,11 @@ use Phalcon\Events\Manager as EventsManager;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+\Codeception\Util\Autoload::addNamespace(
+    'TimurFlush\Auth\Tests\Support\Auth',
+    __DIR__ . '/_support/Auth'
+);
+
 $di = new Di();
 
 $di->setShared('modelsManager', function () {

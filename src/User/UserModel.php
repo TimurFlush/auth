@@ -15,7 +15,7 @@ use TimurFlush\Auth\Policy\PolicyExecutorTrait;
 use TimurFlush\Auth\Role\RoleInterface;
 use TimurFlush\Auth\Exception\UnsafeException;
 
-class UserModel extends Model implements UserInterface, SerializerAwareInterface
+abstract class UserModel extends Model implements UserInterface, SerializerAwareInterface
 {
     use PolicyExecutorTrait;
 
