@@ -108,7 +108,7 @@ class PermissionsCest
 
     public function isPermitted(UnitTester $I)
     {
-        $I->wantToTest('UserModel::flushPermissions()');
+        $I->wantToTest('UserModel::isPermitted()');
 
         $userModel = new UserModel();
 

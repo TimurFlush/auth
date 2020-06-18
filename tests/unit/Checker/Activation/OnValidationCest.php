@@ -25,7 +25,7 @@ class OnValidationCest
             ->shouldReceive('getActivationStatus')
             ->andReturn(false);
 
-        $I->assertTrue($checker->onAuthentication($userMock1));
-        $I->assertFalse($checker->onAuthentication($userMock2));
+        $I->assertTrue($checker->onValidation($userMock1));
+        $I->assertFalse($checker->onValidation($userMock2));
     }
 }

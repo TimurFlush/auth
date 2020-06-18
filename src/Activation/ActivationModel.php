@@ -6,19 +6,19 @@ namespace TimurFlush\Auth\Activation;
 
 use Phalcon\Mvc\Model;
 
-class ActivationModel extends Model implements ActivationInterface
+abstract class ActivationModel extends Model implements ActivationInterface
 {
     /**
      * @Column(type='varchar', nullable=false)
      * @Primary
      */
-    protected ?string $id;
+    protected ?string $id = null;
 
     /**
      * @Column(type='biginteger', nullable=false)
      * @Primary
      */
-    protected ?int $user_id;
+    protected ?int $user_id = null;
 
     public function initialize()
     {
