@@ -9,11 +9,11 @@ interface SerializerInterface
     /**
      * Serializes data.
      *
-     * @param array $permissions Associative array.
+     * @param array $data Associative array.
      *
      * @return string
      */
-    public function serialize(array $permissions): string;
+    public function serialize(array $data): string;
 
     /**
      * Unserializes data.

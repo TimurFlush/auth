@@ -59,27 +59,23 @@ final class PolicyInspector
             );
         }
 
-        if (
-            is_a(
-                $argumentType->getName(),
+        if (is_a(
+            $argumentType->getName(),
             UserInterface::class,
             true
-            )
-        ) {
+        )) {
             $this->toUser = true;
             $this->isAllowNull = $argumentType->allowsNull();
-        } elseif (
-            is_a(
-                $argumentType->getName(),
+        } elseif (is_a(
+            $argumentType->getName(),
             RoleInterface::class,
             true
-            )
-        ) {
+        )) {
             $this->toRole = true;
         } else {
             throw new InvalidArgumentException(
                 sprintf(
-                    "The first argument of the policy %s must refer to the %s or the %s",
+                    "The first argument of the policy '%s' must refer to the %s or the %s",
                     $policyAction,
                     UserInterface::class,
                     RoleInterface::class

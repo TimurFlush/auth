@@ -6,6 +6,7 @@ namespace TimurFlush\Auth\Policy;
 
 use TimurFlush\Auth\Exception;
 use Closure;
+use TimurFlush\Auth\Role\RepositoryInterface as RoleRepository;
 use TimurFlush\Auth\Role\RoleInterface;
 use TimurFlush\Auth\User\UserInterface;
 use TimurFlush\Auth\Exception\InvalidArgumentException;
@@ -18,13 +19,17 @@ class PolicyManager implements PolicyManagerInterface
 
     protected array $policies = [];
 
+    protected RoleRepository $roleRepository;
+
     /**
      * PolicyManager constructor.
      *
-     * @param Closure $executorResolver A closure which must be return UserInterface or RoleInterface
+     * @param RoleRepository $roleRepository
+     * @param Closure        $executorResolver A closure which must be return UserInterface or RoleInterface
      */
-    public function __construct(Closure $executorResolver)
+    public function __construct(RoleRepository $roleRepository, Closure $executorResolver)
     {
+        $this->roleRepository = $roleRepository;
         $this->executorResolver = $executorResolver;
     }
 
@@ -112,6 +117,7 @@ class PolicyManager implements PolicyManagerInterface
     protected function resolveComplexPolicy($owner): object
     {
         if (!is_string($owner) && !is_object($owner)) {
+            //@codeCoverageIgnoreStart
             $owner = is_object($owner) ? get_class($owner) : gettype($owner);
 
             throw new InvalidArgumentException(
@@ -120,6 +126,7 @@ class PolicyManager implements PolicyManagerInterface
                     $owner
                 )
             );
+            //@codeCoverageIgnoreEnd
         }
 
         if (is_object($owner)) {
@@ -135,9 +142,11 @@ class PolicyManager implements PolicyManagerInterface
             return $this->policies[$owner] = new $this->assignMap[$owner];
         }
 
+        //@codeCoverageIgnoreStart
         throw new InvalidArgumentException(
             "A complex policy which assigned to the owner '" . $owner . "' does not exist."
         );
+        //@codeCoverageIgnoreEnd
     }
 
     /**
@@ -157,6 +166,7 @@ class PolicyManager implements PolicyManagerInterface
             $executor instanceof RoleInterface === false &&
             $executor !== null
         ) {
+            //@codeCoverageIgnoreStart
             throw new Exception(
                 sprintf(
                     "The executor resolver must return null, %s or %s, %s given",
@@ -165,6 +175,7 @@ class PolicyManager implements PolicyManagerInterface
                     is_object($executor) ? get_class($executor) : gettype($executor)
                 )
             );
+            //@codeCoverageIgnoreEnd
         }
 
         return $executor;
@@ -179,7 +190,8 @@ class PolicyManager implements PolicyManagerInterface
      */
     protected function isSimplePolicy(string $name): bool
     {
-        return (bool)preg_match('/.+:.+/', $name);
+        return strpos($name, ':') > 0 && strlen($name) > 1 && substr_count($name, ':') === 1;
+        //return (bool)preg_match('/.+:.+/', $name);
     }
 
     /**
@@ -194,9 +206,11 @@ class PolicyManager implements PolicyManagerInterface
     protected function resolveSimplePolicy(string $policyAction): Closure
     {
         if (!isset($this->policies[$policyAction])) {
+            //@codeCoverageIgnoreStart
             throw new InvalidArgumentException(
                 "A simple policy with the action '" . $policyAction . "' does not exist"
             );
+            //@codeCoverageIgnoreEnd
         }
 
         return $this->policies[$policyAction];
@@ -210,8 +224,10 @@ class PolicyManager implements PolicyManagerInterface
      * @throws \ReflectionException                                Please see the method `\TimurFlush\Auth\Policy\PolicyInspector::__construct()`
      * @throws \TimurFlush\Auth\Exception                          If a resolved policy does not allow for guests.
      */
-    public function isGranted(string $policyAction, $owner, ...$extraArguments): bool
+    public function isGranted(string $policyAction, $owner = null, ...$extraArguments): bool
     {
+        $args = func_get_args();
+
         if ($this->isSimplePolicy($policyAction)) {
             $callback = $this->resolveSimplePolicy($policyAction);
         } else {
@@ -239,13 +255,28 @@ class PolicyManager implements PolicyManagerInterface
 
             $callArray = [$executor];
         } elseif ($policyInspector->isRolePolicy()) {
-            /**
-             * Unlike the case above, if a user does not have an assigned role,
-             * we should not continue to execute the policy without the role
-             * because it makes no sense.
-             */
-            if ($executor === null) {
+            if ($executor instanceof RoleInterface) {
+                // N O P
+            } elseif ($executor instanceof UserInterface) {
+                foreach ($executor->getRoles() as $roleName) {
+                    $getRole = $this->roleRepository->findByName($roleName);
+
+                    if ($getRole === null) {
+                        continue;
+                    }
+
+                    $effect = $this->forExecutor($getRole)->isGranted(...$args);
+
+                    if ($effect === true) {
+                        return $effect;
+                    }
+                }
+
                 return false;
+            } else {
+                //@codeCoverageIgnoreStart
+                return false;
+                //@codeCoverageIgnoreEnd
             }
 
             $callArray = [$executor];

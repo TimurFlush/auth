@@ -25,14 +25,16 @@ trait PolicyExecutorTrait
      * @throws \TimurFlush\Auth\Exception\InvalidArgumentException Please see the method `TimurFlush\Auth\Policy\PolicyManager::isGranted()`
      * @throws \ReflectionException                                Please see the method `TimurFlush\Auth\Policy\PolicyManager::isGranted()`
      */
-    public function isGranted(string $policyAction, $owner, ...$extraArguments): bool
+    public function isGranted(string $policyAction, $owner = null, ...$extraArguments): bool
     {
         $di = $this->getDI();
 
         if (!$di->has('policyManager')) {
+            //@codeCoverageIgnoreStart
             throw new Exception(
                 "The dependency injection container does not contain the service 'policyManager'"
             );
+            //@codeCoverageIgnoreEnd
         }
 
         /** @var PolicyManagerInterface $policyManager */

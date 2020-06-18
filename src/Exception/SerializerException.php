@@ -6,6 +6,6 @@ namespace TimurFlush\Auth\Exception;
 
 use TimurFlush\Auth\Exception;
 
-class PermissionsSerializerException extends Exception
+class SerializerException extends Exception
 {
 }

@@ -21,17 +21,17 @@ abstract class RoleModel extends Model implements RoleInterface, SerializerAware
      * @Primary
      * @Identity
      */
-    protected ?int $id;
+    protected ?int $id = null;
 
     /**
      * @Column(type='varchar', nullable=false)
      */
-    protected ?string $name;
+    protected ?string $name = null;
 
     /**
      * @Column(type='text', nullable=true)
      */
-    protected ?string $description;
+    protected ?string $description = null;
 
     /**
      * @Column(type='text', nullable=true)
@@ -50,6 +50,7 @@ abstract class RoleModel extends Model implements RoleInterface, SerializerAware
         $this->useDynamicUpdate(true);
     }
 
+
     public function onConstruct()
     {
         /**
@@ -66,7 +67,9 @@ abstract class RoleModel extends Model implements RoleInterface, SerializerAware
         if (!empty($this->permissions)) {
             $this->permissions = $this->serializer->unserialize($this->permissions);
         } else {
+            //@codeCoverageIgnoreStart
             $this->permissions = null;
+            //@codeCoverageIgnoreEnd
         }
     }
 
@@ -77,8 +80,18 @@ abstract class RoleModel extends Model implements RoleInterface, SerializerAware
                 array_values($this->permissions)
             );
         } else {
+            //@codeCoverageIgnoreStart
             $this->permissions = null;
+            //@codeCoverageIgnoreEnd
         }
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function afterSave()
+    {
+        $this->afterFetch();
     }
 
     /**

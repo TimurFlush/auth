@@ -11,7 +11,7 @@ use Phalcon\Mvc\Model;
  * @property string      $name
  * @property string|null $description
  */
-class PermissionModel extends Model implements PermissionInterface
+abstract class PermissionModel extends Model implements PermissionInterface
 {
     /**
      * @Column(type='integer', nullable=false)
@@ -23,12 +23,12 @@ class PermissionModel extends Model implements PermissionInterface
     /**
      * @Column(type='varchar', nullable=false)
      */
-    protected ?string $name;
+    protected ?string $name = null;
 
     /**
      * @Column(type='varchar', nullable=true)
      */
-    protected ?string $description;
+    protected ?string $description = null;
 
     public function initialize()
     {
@@ -54,7 +54,7 @@ class PermissionModel extends Model implements PermissionInterface
      *
      * @return int|null
      */
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -73,7 +73,7 @@ class PermissionModel extends Model implements PermissionInterface
     /**
      * {@inheritDoc}
      */
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->name;
     }

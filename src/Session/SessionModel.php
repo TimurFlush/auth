@@ -8,7 +8,6 @@ use Carbon\Carbon;
 use Phalcon\Mvc\Model;
 use TimurFlush\Auth\Exception\InvalidArgumentException;
 use TimurFlush\Auth\Manager;
-use TimurFlush\Auth\Session\SessionInterface;
 use TimurFlush\Auth\Support\Model\InteractsWithCreatedAt;
 use TimurFlush\Auth\Support\Model\InteractsWithUpdatedAt;
 use DateTimeInterface;
@@ -23,7 +22,7 @@ abstract class SessionModel extends Model implements SessionInterface
      * @Primary
      * @Identity
      */
-    protected ?int $id = null;
+    protected ?string $id = null;
 
     /**
      * @Column(type='biginteger', nullable=false)
@@ -33,7 +32,7 @@ abstract class SessionModel extends Model implements SessionInterface
     /**
      * @Column(type='varchar', nullable=true)
      */
-    protected ?string $remember_token;
+    protected ?string $remember_token = null;
 
     /**
      * @Column(type='timestamp', nullable=true)
@@ -161,6 +160,15 @@ abstract class SessionModel extends Model implements SessionInterface
      */
     public function isRevoked(): bool
     {
-        return $this->expires_at === null;
+        /**
+         * @var Manager $authManager
+         */
+        $authManager = $this
+            ->getDI()
+            ->getShared('authManager');
+
+        return $this->expires_at === null
+            ? true
+            : Carbon::createFromFormat($authManager->getSqlDateFormat(), $this->expires_at)->isPast();
     }
 }

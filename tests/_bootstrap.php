@@ -71,11 +71,13 @@ function replaceAuthManager(
 
     $di->remove('authManager');
 
-    $di->setShared('authManager', new AuthManager(
+    $di->setShared('authManager', $am = new AuthManager(
         $userRepository,
         $activationRepository,
         $roleRepository,
         $serializer,
         $eventsManager
     ));
+
+    return $am;
 }
