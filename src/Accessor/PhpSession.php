@@ -148,7 +148,7 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
     protected function resolve(int $method, $userId, $sessionId, $rememberToken = null): bool
     {
         if (
-            $method !== static::RESOLVING_VIA_PHP_SESSION ||
+            $method !== static::RESOLVING_VIA_PHP_SESSION &&
             $method !== static::RESOLVING_VIA_COOKIES
         ) {
             throw new InvalidArgumentException('Unknown resolving method');
