@@ -20,7 +20,6 @@ abstract class SessionModel extends Model implements SessionInterface
     /**
      * @Column(type='varchar', nullable=false)
      * @Primary
-     * @Identity
      */
     protected ?string $id = null;
 
