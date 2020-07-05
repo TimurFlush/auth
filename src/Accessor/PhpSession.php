@@ -89,6 +89,16 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function isAuth(): bool
+    {
+        $this->resolveIfNeed();
+
+        return parent::isAuth();
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @throws InvalidArgumentException Please see the method `static::resolveViaPhpSession()`
@@ -100,11 +110,7 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
             return $this->user;
         }
 
-        $isResolved = $this->resolveViaPhpSession();
-
-        if (!$isResolved) {
-            $this->resolveViaCookies();
-        }
+        $this->resolveIfNeed();
 
         return isset($this->user)
             ? $this->user
@@ -122,15 +128,30 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
             return $this->session;
         }
 
-        $isResolved = $this->resolveViaPhpSession();
-
-        if (!$isResolved) {
-            $this->resolveViaCookies();
-        }
+        $this->resolveIfNeed();
 
         return isset($this->session)
             ? $this->session
             : null;
+    }
+
+    /**
+     * @param bool $force
+     *
+     * @return void
+     */
+    protected function resolveIfNeed(bool $force = false): void
+    {
+        if (isset($this->user)) {
+            return;
+        }
+
+        $isResolved = $this->resolveViaPhpSession();
+
+        if (!$isResolved && !$this->isAlreadyResolved) {
+            $this->resolveViaCookies();
+            $this->isAlreadyResolved = true;
+        }
     }
 
     /**
@@ -145,7 +166,7 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
      *
      * @throws InvalidArgumentException If specified an unknown resolving method
      */
-    protected function resolve(int $method, $userId, $sessionId, $rememberToken = null): bool
+    protected function _doLowResolve(int $method, $userId, $sessionId, $rememberToken = null): bool
     {
         if (
             $method !== static::RESOLVING_VIA_PHP_SESSION &&
@@ -303,7 +324,7 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
     /**
      * @throws InvalidArgumentException Please see the method `static::resolve()`
      */
-    public function resolveViaPhpSession(): bool
+    protected function resolveViaPhpSession(): bool
     {
         $session = $this->phalconSession->get($this->getSessionKey());
 
@@ -311,7 +332,7 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
             return false;
         }
 
-        return $this->resolve(
+        return $this->_doLowResolve(
             static::RESOLVING_VIA_PHP_SESSION,
             $session['userId'],
             $session['sessionId']
@@ -321,7 +342,7 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
     /**
      * @throws InvalidArgumentException Please see the method `static::resolve()`
      */
-    public function resolveViaCookies(): bool
+    protected function resolveViaCookies(): bool
     {
         $cookies = $this
             ->phalconCookies
@@ -340,10 +361,11 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
         }
 
         if (!isset($cookies['userId'], $cookies['sessionId'], $cookies['rememberToken'])) {
+            $this->phalconCookies->delete($this->getCookiesKey());
             return false;
         }
 
-        return $this->resolve(
+        return $this->_doLowResolve(
             static::RESOLVING_VIA_COOKIES,
             $cookies['userId'],
             $cookies['sessionId'],
