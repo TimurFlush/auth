@@ -133,7 +133,6 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
         return isset($this->session)
             ? $this->session
             : null;
-    }
 
     /**
      * @param bool $force
