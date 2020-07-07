@@ -148,9 +148,8 @@ class PhpSession extends AccessorAbstract implements StatefulAccessorInterface
 
         $isResolved = $this->resolveViaPhpSession();
 
-        if (!$isResolved && !$this->isAlreadyResolved) {
+        if (!$isResolved) {
             $this->resolveViaCookies();
-            $this->isAlreadyResolved = true;
         }
     }
 
