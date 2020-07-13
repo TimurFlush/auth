@@ -238,4 +238,18 @@ abstract class RoleModel extends Model implements RoleInterface, SerializerAware
         $this->permissions = null;
         return $this;
     }
+
+    /**
+     * @return $this
+     */
+    public function setDescription(?string $description)
+    {
+        $this->description = $description;
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
 }
