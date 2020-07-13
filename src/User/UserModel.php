@@ -32,12 +32,12 @@ abstract class UserModel extends Model implements UserInterface, SerializerAware
     protected ?string $password = null;
 
     /**
-     * @Column(type='bool', nullable=true)
+     * @Column(type='boolean', nullable=true)
      */
     protected ?bool $ban_status = null;
 
     /**
-     * @Column(type='bool', nullable=true)
+     * @Column(type='boolean', nullable=true)
      */
     protected ?bool $activation_status = null;
 
